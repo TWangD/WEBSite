@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual</title>
+</head>
+<body>
+     <svg viewBox="0 0 1400 500" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- repeating small kaomoji -->
+      <pattern id="kaomojiPattern" width="130" height="30" patternUnits="userSpaceOnUse">
+        <text
+          x="0"
+          y="20"
+          font-family="monospace"
+          font-size="18"
+          fill="#ffb751"
+        >(〃•ω•〃)</text>
+      </pattern>
+    </defs>
+
+    <!-- big kaomoji shape -->
+    <text
+      x="700"
+      y="300"
+      text-anchor="middle"
+      font-family="Arial Black, sans-serif"
+      font-size="220"
+      fill="url(#kaomojiPattern)"
+    >(〃•ω•〃)</text>
+  </svg>
+</body>
+</html>
