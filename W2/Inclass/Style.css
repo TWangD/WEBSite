@@ -1,0 +1,49 @@
+        body{
+            margin: 0;
+        }
+        header{
+            background-color: aquamarine;
+            padding: 10px 20px;
+        }
+        h3,li {
+            color: dodgerblue;
+        }
+
+        h2,h3,li{
+            font-family: "Noto Sans", Arial, Helvetica, sans-serif
+        }
+        
+        ul{
+            padding-left: 0;
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        li{
+            text-align: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgb(0, 0, 0);
+        }
+        
+        li:last-child{
+            border-bottom: none;
+        }
+      
+        .p-regular{
+            color:black;
+            font-size: 15px;
+            font-family:"Noto Sans", Arial, Helvetica, sans-serif;
+        }
+        
+        @media (min-width: 744px){
+            ul{
+                flex-direction: row;
+            }
+        }
+        li{
+            border-right: 1px solid rgb(0,0,0)
+            boarder-bottom: none;
+            padding: 0 10px
+        }
