@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="Style.css" rel="stylesheet">
+    <title>My Cat Gallery</title>
+</head>
+<body>
+
+    <header>
+        <a href="#gallery" class="logo">CAT GALLERY</a>
+    </header>
+
+    <main id="gallery">
+        <div class="gallery-heading">
+            <p class="small-title">A PHOTO COLLECTION</p>
+            <h1>My cat gallery</h1>
+            <p>Choose a photo, or let the gallery play.</p>
+        </div>
+
+        <div class="gallery-layout">
+            <!-- These five thumbnail buttons are arranged vertically. -->
+            <div class="thumbnails" id="thumbnails" role="group" aria-label="Choose a photo">
+                <button class="thumbnail selected" type="button" aria-label="Show photo 1" aria-pressed="true" aria-controls="imgToToggle">
+                    <img src="20210625_115122.jpg" alt="Resting on a wooden chair">
+                </button>
+
+                <button class="thumbnail" type="button" aria-label="Show photo 2" aria-pressed="false" aria-controls="imgToToggle">
+                    <img src="20210929_164759.jpg" alt="Peeking through a chair frame">
+                </button>
+
+                <button class="thumbnail" type="button" aria-label="Show photo 3" aria-pressed="false" aria-controls="imgToToggle">
+                    <img src="mmexport1641533854983.jpg" alt="A close-up of my cat">
+                </button>
+
+                <button class="thumbnail" type="button" aria-label="Show photo 4" aria-pressed="false" aria-controls="imgToToggle">
+                    <img src="wx_camera_1577459231767.jpg" alt="Enjoying a chin scratch">
+                </button>
+
+                <button class="thumbnail" type="button" aria-label="Show photo 5" aria-pressed="false" aria-controls="imgToToggle">
+                    <img src="wx_camera_1604558419662.jpg" alt="Peeking over the bathroom sink">
+                </button>
+            </div>
+
+            <div class="display-area">
+                <figure>
+                    <div class="image-frame">
+                        <img src="20210625_115122.jpg" alt="Resting on a wooden chair" id="imgToToggle">
+                    </div>
+
+                    <figcaption>
+                        <span id="imageCount">1 / 5</span>
+                    </figcaption>
+                </figure>
+
+                <div class="controls" id="controls">
+                    <button id="playButton" type="button">Play</button>
+                    <button id="pauseButton" type="button">Pause</button>
+                    <span id="playStatus" role="status">Ready to play</span>
+                </div>
+            </div>
+        </div>
+
+        <noscript>Turn on JavaScript to select photos and play the slideshow.</noscript>
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

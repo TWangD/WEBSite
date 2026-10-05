@@ -1,0 +1,234 @@
+/* Colors inspired by your reference: navy, maroon, pink, orange and warm gold. */
+html, body {
+    margin: 0;
+    width: 100%;
+    min-height: 100vh;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f7f3ed;
+    color: #202b40;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background-color: #202b40;
+    border-bottom: 4px solid #d6c3a0;
+    padding: 22px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+header a {
+    color: #f7f3ed;
+    text-decoration: none;
+}
+
+.logo {
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+main {
+    max-width: 960px;
+    margin: 32px auto;
+    padding: 32px;
+    background-color: #eee5d7;
+    border-top: 4px solid #66394c;
+}
+
+.gallery-heading {
+    margin-bottom: 28px;
+}
+
+.small-title {
+    margin: 0 0 8px;
+    color: #66394c;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+h1 {
+    margin: 0 0 10px;
+    color: #66394c;
+    font-size: 34px;
+}
+
+.gallery-heading > p:last-child {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.gallery-layout {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.thumbnails {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.thumbnail {
+    width: 88px;
+    height: 88px;
+    padding: 0;
+    border: 3px solid #bf947a;
+    border-radius: 6px;
+    background-color: #202b40;
+    cursor: pointer;
+}
+
+.thumbnail img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 3px;
+}
+
+.thumbnail:hover {
+    border-color: #d45b94;
+}
+
+.thumbnail.selected {
+    border-color: #e3692e;
+    outline: 2px solid #e3692e;
+    outline-offset: 2px;
+}
+
+figure {
+    margin: 0;
+}
+
+.image-frame {
+    height: 488px;
+    background-color: #202b40;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+#imgToToggle {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+figcaption {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 16px;
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+#imageCount {
+    color: #66394c;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.controls button {
+    min-width: 88px;
+    padding: 11px 22px;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#playButton {
+    background-color: #66394c;
+    color: #ffffff;
+}
+
+#pauseButton {
+    background-color: #b52d53;
+    color: #ffffff;
+}
+
+.controls button:hover:not(:disabled) {
+    border-color: #202b40;
+}
+
+.controls button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+button:focus-visible, a:focus-visible {
+    outline: 3px solid #b52d53;
+    outline-offset: 5px;
+}
+
+header a:focus-visible {
+    outline-color: #ef94bc;
+}
+
+#playStatus {
+    font-size: 12px;
+}
+
+@media (max-width: 600px) {
+    header {
+        padding: 18px 16px;
+        flex-wrap: wrap;
+    }
+
+    main {
+        margin: 16px 12px;
+        padding: 24px 16px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    .gallery-layout {
+        grid-template-columns: 56px minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .thumbnail {
+        width: 56px;
+        height: 56px;
+    }
+
+    .image-frame {
+        height: 328px;
+    }
+
+    .controls {
+        gap: 8px;
+    }
+
+    .controls button {
+        min-width: 76px;
+        padding: 10px 14px;
+    }
+}
