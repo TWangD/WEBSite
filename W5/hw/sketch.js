@@ -21,45 +21,71 @@ function draw() {
 
   drawGraphicBackground(colors);
 
-  // ROTATING SQUARE: orbit with an extra vertical rhythm.
-  let squareX = 195 + cos(t * 0.95) * 125;
-  let squareY = 235 + sin(t * 0.95) * 95
-                   + sin(t * 2.4) * 18;
+  // SQUARE: nonlinear looping motion with changing speed.
+  let orbitAngle = t * 0.9 + sin(t * 1.1) * 0.7;
 
-  // OSCILLATING TRIANGLE: independent speed and phase.
-  let swing = sin(t * 1.61 + 1.2) * 0.85;
+  // Perlin noise expands and contracts the path.
+  let orbitWidth = map(noise(20, t * 0.25), 0, 1, 85, 140);
+  let orbitHeight = map(noise(60, t * 0.3), 0, 1, 60, 105);
+
+  let squareX =
+    195 +
+    cos(orbitAngle) * orbitWidth +
+    sin(t * 2.3) * 24;
+
+  let squareY =
+    235 +
+    sin(orbitAngle * 2) * orbitHeight +
+    cos(t * 1.7) * 18;
+
+  // TRIANGLE: independent, uneven swinging rhythm.
+  let swingPhase = t * 1.61 + sin(t * 0.73) * 0.9;
+
+  let swing =
+    sin(swingPhase + 1.2) * 0.72 +
+    sin(t * 3.17) * 0.16;
+
   let pivotX = 455;
   let pivotY = 120;
-  let ropeLength = 175;
+
+  // Elastic cable stretches and contracts.
+  let ropeLength =
+    165 +
+    sin(t * 2.13 + 0.8) * 20 +
+    map(noise(100, t * 0.4), 0, 1, -12, 12);
 
   let triangleX = pivotX + sin(swing) * ropeLength;
   let triangleY = pivotY + cos(swing) * ropeLength;
 
-  // Save ink stamps at a consistent time interval.
+  // Record positions for the ink trails.
   let now = millis();
+  let squareRotation = t * 2.2 + sin(t * 1.7) * 0.8;
 
-  if (trails.length === 0 ||
-      now - trails[trails.length - 1].born > 45) {
+  if (
+    trails.length === 0 ||
+    now - trails[trails.length - 1].born > 45
+  ) {
     trails.push({
       x: squareX,
       y: squareY,
       x2: triangleX,
       y2: triangleY,
-      angle: t,
+      squareAngle: squareRotation,
+      triangleAngle: -swing,
       born: now
     });
   }
 
   trails = trails.filter(mark => now - mark.born < 1100);
 
-  // Geometric ink trails.
+  // Draw shrinking geometric ink trails.
   for (let mark of trails) {
     let life = 1 - (now - mark.born) / 1100;
     let size = 24 * life;
 
     push();
     translate(mark.x, mark.y);
-    rotate(mark.angle * 2);
+    rotate(mark.squareAngle);
 
     noStroke();
     fill(colors[0]);
@@ -68,7 +94,7 @@ function draw() {
 
     push();
     translate(mark.x2, mark.y2);
-    rotate(-mark.angle);
+    rotate(mark.triangleAngle);
 
     noStroke();
     fill(colors[1]);
@@ -80,7 +106,7 @@ function draw() {
     pop();
   }
 
-  // Orbit center.
+  // Rotating center marker.
   push();
   translate(195, 235);
   rotate(-t);
@@ -113,12 +139,11 @@ function draw() {
   // MAIN SQUARE
   push();
   translate(squareX, squareY);
-  rotate(t * 2.2);
+  rotate(squareRotation);
 
-  // Perlin noise changes size smoothly.
   let size = map(noise(10, t * 0.65), 0, 1, 42, 66);
 
-  // Offset graphic shadow.
+  // Offset shadow.
   noStroke();
   fill("#19191D");
   square(7, 8, size);
@@ -128,13 +153,14 @@ function draw() {
   fill(colors[0]);
   square(0, 0, size);
 
-  // White highlight.
+  // Highlight.
   stroke("#FFFFFF");
   strokeWeight(4);
-  line(-size * 0.28, -size * 0.28,
-        size * 0.1, -size * 0.28);
+  line(
+    -size * 0.28, -size * 0.28,
+    size * 0.1, -size * 0.28
+  );
 
-  // Contrasting center.
   noStroke();
   fill(colors[2]);
   square(5, 6, size * 0.28);
@@ -148,6 +174,7 @@ function draw() {
   let pulse = map(noise(80, t * 0.7), 0, 1, 0.85, 1.2);
   scale(pulse);
 
+  // Offset shadow.
   noStroke();
   fill("#19191D");
   triangle(7, -31, -28, 33, 42, 33);
@@ -180,12 +207,12 @@ function drawGraphicBackground(colors) {
     }
   }
 
-  // Static ink splashes with noise-shaped edges.
+  // Organic ink splashes.
   inkSplash(35, 145, 65, colors[0], 10);
   inkSplash(600, 330, 78, colors[1], 40);
   inkSplash(285, 465, 60, colors[2], 90);
 
-  // Bold diagonal stripes.
+  // Diagonal graphic stripes.
   push();
   translate(575, 70);
   rotate(-0.45);
@@ -207,7 +234,7 @@ function inkSplash(x, y, radius, ink, seed) {
   noStroke();
   fill(ink);
 
-  // Perlin noise makes a ragged organic outline.
+  // Perlin noise creates an irregular outline.
   beginShape();
 
   for (let i = 0; i < 80; i++) {
@@ -225,11 +252,15 @@ function inkSplash(x, y, radius, ink, seed) {
 
   endShape(CLOSE);
 
-  // Scattered droplets stay fixed between frames.
+  // Fixed droplets avoid flickering.
   for (let i = 0; i < 9; i++) {
     let a = noise(seed + i * 7) * TWO_PI;
-    let distance = radius * map(noise(seed + i + 30), 0, 1, 0.8, 1.5);
-    let diameter = map(noise(seed + i + 60), 0, 1, 4, 13);
+
+    let distance =
+      radius * map(noise(seed + i + 30), 0, 1, 0.8, 1.5);
+
+    let diameter =
+      map(noise(seed + i + 60), 0, 1, 4, 13);
 
     circle(
       cos(a) * distance,
