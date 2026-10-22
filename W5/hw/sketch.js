@@ -1,12 +1,12 @@
 function setup() {
   createCanvas(640, 480);
   rectMode(CENTER);
-  background("#F5F5EF");
+  background("#15152A");
 }
 
 function draw() {
-  // Light background with fading trails.
-  background(245, 245, 239, 35);
+  // Transparent background creates fading motion trails.
+  background(21, 21, 42, 35);
 
   let t = millis() / 1000;
 
@@ -18,7 +18,7 @@ function draw() {
 
   // Orbit guide.
   noFill();
-  stroke(30, 30, 50, 30);
+  stroke(255, 25);
   strokeWeight(1);
   ellipse(205, 240, 260, 210);
 
@@ -28,42 +28,43 @@ function draw() {
   rotate(-t * 0.4);
 
   noStroke();
-  fill("#FFB703");
+  fill("#FFD166");
   square(0, 0, 24);
   pop();
 
-  // Rotating square.
+  // Square rotates while orbiting.
   push();
   translate(squareX, squareY);
   rotate(t * 1.8);
 
-  stroke("#A51660");
+  stroke("#FFB3DB");
   strokeWeight(2);
   fill("#EF479D");
   square(0, 0, 48);
 
   noStroke();
-  fill("#FFCF33");
+  fill("#FFD166");
   square(0, 0, 18);
   pop();
 
   // SWINGING TRIANGLE
+  // Different frequency and phase create an independent rhythm.
   let swingAngle = sin(t * 1.47 + PI / 3) * 0.65;
 
   let pivotX = 470;
   let pivotY = 100;
-  let ropeLength = 195;
+  let length = 195;
 
-  let triangleX = pivotX + sin(swingAngle) * ropeLength;
-  let triangleY = pivotY + cos(swingAngle) * ropeLength;
+  let triangleX = pivotX + sin(swingAngle) * length;
+  let triangleY = pivotY + cos(swingAngle) * length;
 
-  stroke("#646480");
+  stroke("#A5A7D4");
   strokeWeight(2);
   line(pivotX, pivotY, triangleX, triangleY);
 
   // Pivot point.
   noStroke();
-  fill("#FFB703");
+  fill("#FFD166");
   circle(pivotX, pivotY, 12);
 
   // Triangle tilts with the swing.
@@ -71,7 +72,7 @@ function draw() {
   translate(triangleX, triangleY);
   rotate(-swingAngle);
 
-  stroke("#008F75");
+  stroke("#B4FFF2");
   strokeWeight(2);
   fill("#06D6A0");
   triangle(0, -30, -29, 23, 29, 23);
@@ -83,22 +84,22 @@ function draw() {
 
   // Labels.
   noStroke();
-  fill("#222238");
+  fill("#FFFFFF");
   textAlign(CENTER);
   textSize(20);
   text("COLOR IN MOTION", width / 2, 40);
 
-  fill("#A51660");
+  fill("#FFB3DB");
   textSize(12);
   text("ROTATE + ORBIT", 205, 410);
 
-  fill("#007C66");
+  fill("#B4FFF2");
   text("SWING + REPEAT", 470, 410);
 
-  fill("#646480");
+  fill("#A5A7D4");
   text("Click to restart the trails", width / 2, 452);
 }
 
 function mousePressed() {
-  background("#F5F5EF");
+  background("#15152A");
 }
