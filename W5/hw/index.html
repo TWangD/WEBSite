@@ -1,14 +1,622 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Time and oscillation</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/p5@2.3.4/lib/p5.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/p5.sound@0.4.1/dist/p5.sound.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Time and Oscillation</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.11/lib/p5.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f0dc;
+      color: #19191d;
+      font-family: Arial, sans-serif;
+    }
+
+    header,
+    main,
+    footer {
+      width: 90%;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    header {
+      padding: 35px 0;
+      border-bottom: 3px solid #19191d;
+    }
+
+    h1 {
+      margin: 10px 0;
+      font-size: clamp(48px, 9vw, 90px);
+      line-height: 1;
+    }
+
+    h1 span {
+      color: #ff3299;
+    }
+
+    .author {
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .sketch-container {
+      max-width: 648px;
+      margin: 40px auto;
+      border: 4px solid #19191d;
+      box-shadow: 8px 8px #ff3299;
+    }
+
+    #sketch canvas {
+      display: block;
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
+    }
+
+    button {
+      padding: 10px 14px;
+      border: 2px solid #19191d;
+      background: #bfff00;
+      color: #19191d;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #ffb4d9;
+    }
+
+    button:focus-visible {
+      outline: 3px solid #693cff;
+      outline-offset: 3px;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 35px;
+      margin: 55px 0;
+    }
+
+    figure {
+      margin: 0;
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: contain;
+      border: 3px solid #19191d;
+      background: #e9e4cf;
+    }
+
+    h2 {
+      margin: 18px 0 10px;
+      font-size: 19px;
+    }
+
+    .number {
+      display: inline-block;
+      padding: 5px 10px;
+      margin-right: 8px;
+      border: 2px solid #19191d;
+      background: #bfff00;
+      font-size: 14px;
+    }
+
+    figcaption p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    footer {
+      padding: 20px 0;
+      border-top: 3px solid #19191d;
+      font-size: 12px;
+    }
+
+    @media (max-width: 650px) {
+      .gallery {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
-    <script src="sketch.js"></script>
+
+  <header>
+    <p class="author">TIANSHENG WANG / P5.JS MOTION STUDY</p>
+    <h1>Time and <span>Oscillation.</span></h1>
+  </header>
+
+  <main>
+
+    <!-- Animation is embedded directly; no sketch.html is needed. -->
+    <div class="sketch-container">
+      <div id="sketch"></div>
+
+      <div class="controls">
+        <button id="pauseButton" type="button">Pause</button>
+        <button id="colorButton" type="button">Change colors</button>
+        <button id="saveButton" type="button">Save screenshot</button>
+      </div>
+    </div>
+
+    <!-- Keep Capture1–Capture5 beside index.html. -->
+    <section class="gallery" aria-label="Animation iterations">
+
+      <figure>
+        <img
+          src="Capture1.png"
+          data-capture="Capture1"
+          alt="First iteration: orbiting and oscillating shapes.">
+
+        <figcaption>
+          <h2><span class="number">01</span>Starting with motion</h2>
+          <p>
+            I used sine and cosine to create an orbiting shape
+            and a pendulum moving at different rhythms.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img
+          src="Capture2.png"
+          data-capture="Capture2"
+          alt="Second iteration: a playful cosmic animation.">
+
+        <figcaption>
+          <h2><span class="number">02</span>Making it playful</h2>
+          <p>
+            I added playful characters and used Perlin noise
+            to give their outlines an organic appearance.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img
+          src="Capture3.png"
+          data-capture="Capture3"
+          alt="Third iteration: colorful geometric shapes.">
+
+        <figcaption>
+          <h2><span class="number">03</span>Returning to geometry</h2>
+          <p>
+            I simplified the characters into colorful geometric
+            shapes with trails that reveal their movement.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img
+          src="Capture4.png"
+          data-capture="Capture4"
+          alt="Fourth iteration: shapes on a light background.">
+
+        <figcaption>
+          <h2><span class="number">04</span>Reversing the background</h2>
+          <p>
+            I switched to a light background to give the
+            animation a cleaner graphic appearance.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <img
+          src="Capture5.png"
+          data-capture="Capture5"
+          alt="Fifth iteration: neon colors and ink splashes.">
+
+        <figcaption>
+          <h2><span class="number">05</span>Adding graphic energy</h2>
+          <p>
+            I introduced neon colors, bold outlines, and ink
+            splashes for a Splatoon-inspired style.
+          </p>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <!-- Automatically captured from the animation. -->
+        <img
+          id="finalCapture"
+          alt="Final iteration: geometric shapes with nonlinear motion.">
+
+        <figcaption>
+          <h2><span class="number">06</span>Breaking the predictable loop</h2>
+          <p>
+            I combined overlapping waves and Perlin noise to
+            create nonlinear paths and an elastic swinging motion.
+          </p>
+        </figcaption>
+      </figure>
+
+    </section>
+
+  </main>
+
+  <footer>
+    Made with p5.js and developed with AI assistance.
+  </footer>
+
+  <script>
+    // Support common screenshot file extensions.
+    document.querySelectorAll("img[data-capture]").forEach(image => {
+      const extensions = ["jpg", "jpeg", "PNG", "JPG", "webp"];
+      let attempt = 0;
+
+      image.addEventListener("error", () => {
+        if (attempt < extensions.length) {
+          image.src =
+            image.dataset.capture + "." + extensions[attempt++];
+        }
+      });
+    });
+
+    const palettes = [
+      ["#FF3299", "#BFFF00", "#693CFF"],
+      ["#FF6B00", "#783CFF", "#00E5D0"],
+      ["#00CFFF", "#FFEA00", "#FF368B"]
+    ];
+
+    let paletteIndex = 0;
+    let motionTime = 0;
+    let trails = [];
+    let paused = false;
+    let captured = false;
+    let artCanvas;
+
+    function setup() {
+      artCanvas = createCanvas(640, 480);
+      artCanvas.parent("sketch");
+
+      artCanvas.elt.setAttribute("role", "img");
+      artCanvas.elt.setAttribute(
+        "aria-label",
+        "A rotating square and a swinging triangle with colorful ink trails."
+      );
+
+      rectMode(CENTER);
+      strokeJoin(ROUND);
+      noiseSeed(14);
+
+      document.getElementById("pauseButton").onclick = function () {
+        paused = !paused;
+        this.textContent = paused ? "Play" : "Pause";
+      };
+
+      document.getElementById("colorButton").onclick = remixColors;
+
+      document.getElementById("saveButton").onclick = () => {
+        updateFinalCapture();
+        saveCanvas(artCanvas, "Capture6", "png");
+      };
+    }
+
+    function draw() {
+      if (!paused) {
+        motionTime += min(deltaTime, 50) / 1000;
+      }
+
+      const t = motionTime;
+      const colors = palettes[paletteIndex];
+
+      background("#F4F0DC");
+      drawBackground(colors);
+
+      // Changing speed and overlapping waves create a nonlinear path.
+      const orbitAngle = t * 0.9 + sin(t * 1.1) * 0.7;
+
+      const orbitWidth = map(
+        noise(20, t * 0.25), 0, 1, 85, 140
+      );
+
+      const orbitHeight = map(
+        noise(60, t * 0.3), 0, 1, 60, 105
+      );
+
+      const squareX =
+        195 + cos(orbitAngle) * orbitWidth + sin(t * 2.3) * 24;
+
+      const squareY =
+        235 + sin(orbitAngle * 2) * orbitHeight + cos(t * 1.7) * 18;
+
+      const squareRotation = t * 2.2 + sin(t * 1.7) * 0.8;
+
+      // The triangle uses a different frequency and starting phase.
+      const swingPhase = t * 1.61 + sin(t * 0.73) * 0.9;
+
+      const swing =
+        sin(swingPhase + 1.2) * 0.72 + sin(t * 3.17) * 0.16;
+
+      const pivotX = 455;
+      const pivotY = 120;
+
+      const ropeLength =
+        165 +
+        sin(t * 2.13 + 0.8) * 20 +
+        map(noise(100, t * 0.4), 0, 1, -12, 12);
+
+      const triangleX = pivotX + sin(swing) * ropeLength;
+      const triangleY = pivotY + cos(swing) * ropeLength;
+
+      // Record trail positions.
+      if (
+        !paused &&
+        (
+          trails.length === 0 ||
+          t - trails[trails.length - 1].born > 0.045
+        )
+      ) {
+        trails.push({
+          x: squareX,
+          y: squareY,
+          x2: triangleX,
+          y2: triangleY,
+          squareAngle: squareRotation,
+          triangleAngle: -swing,
+          born: t
+        });
+      }
+
+      trails = trails.filter(mark => t - mark.born < 1.1);
+
+      drawTrails(t, colors);
+      drawCenter(t, colors);
+
+      // Pendulum cable and pivot.
+      stroke("#19191D");
+      strokeWeight(6);
+      line(pivotX, pivotY, triangleX, triangleY);
+
+      stroke(colors[2]);
+      strokeWeight(2);
+      line(pivotX, pivotY, triangleX, triangleY);
+
+      stroke("#19191D");
+      strokeWeight(4);
+      fill(colors[2]);
+      circle(pivotX, pivotY, 19);
+
+      drawSquare(squareX, squareY, squareRotation, t, colors);
+      drawTriangle(triangleX, triangleY, swing, t, colors);
+      drawTitle(colors);
+
+      if (!captured && t >= 2) {
+        updateFinalCapture();
+        captured = true;
+      }
+    }
+
+    function drawTrails(t, colors) {
+      for (const mark of trails) {
+        const size = 24 * (1 - (t - mark.born) / 1.1);
+
+        push();
+        translate(mark.x, mark.y);
+        rotate(mark.squareAngle);
+        noStroke();
+        fill(colors[0]);
+        square(0, 0, size);
+        pop();
+
+        push();
+        translate(mark.x2, mark.y2);
+        rotate(mark.triangleAngle);
+        noStroke();
+        fill(colors[1]);
+
+        triangle(
+          0, -size,
+          -size * 0.8, size * 0.6,
+          size * 0.8, size * 0.6
+        );
+
+        pop();
+      }
+    }
+
+    function drawCenter(t, colors) {
+      push();
+      translate(195, 235);
+      rotate(-t);
+
+      stroke("#19191D");
+      strokeWeight(4);
+      fill(colors[2]);
+      square(0, 0, 30);
+
+      noStroke();
+      fill("#FFFFFF");
+      square(0, 0, 9);
+      pop();
+    }
+
+    function drawSquare(x, y, angle, t, colors) {
+      push();
+      translate(x, y);
+      rotate(angle);
+
+      const size = map(noise(10, t * 0.65), 0, 1, 42, 66);
+
+      noStroke();
+      fill("#19191D");
+      square(7, 8, size);
+
+      stroke("#19191D");
+      strokeWeight(5);
+      fill(colors[0]);
+      square(0, 0, size);
+
+      stroke("#FFFFFF");
+      strokeWeight(4);
+
+      line(
+        -size * 0.28, -size * 0.28,
+        size * 0.1, -size * 0.28
+      );
+
+      noStroke();
+      fill(colors[2]);
+      square(5, 6, size * 0.28);
+      pop();
+    }
+
+    function drawTriangle(x, y, swing, t, colors) {
+      push();
+      translate(x, y);
+      rotate(-swing);
+      scale(map(noise(80, t * 0.7), 0, 1, 0.85, 1.2));
+
+      noStroke();
+      fill("#19191D");
+      triangle(7, -31, -28, 33, 42, 33);
+
+      stroke("#19191D");
+      strokeWeight(5);
+      fill(colors[1]);
+      triangle(0, -39, -35, 25, 35, 25);
+
+      noStroke();
+      fill(colors[2]);
+      triangle(0, -13, -13, 12, 13, 12);
+
+      stroke("#FFFFFF");
+      strokeWeight(4);
+      line(-20, 9, -6, -17);
+      pop();
+    }
+
+    function drawBackground(colors) {
+      noStroke();
+      fill(25, 25, 29, 25);
+
+      for (let x = 12; x < width; x += 18) {
+        for (let y = 12; y < height; y += 18) {
+          circle(x, y, 3);
+        }
+      }
+
+      inkSplash(35, 145, 65, colors[0], 10);
+      inkSplash(600, 330, 78, colors[1], 40);
+      inkSplash(285, 465, 60, colors[2], 90);
+
+      push();
+      translate(575, 70);
+      rotate(-0.45);
+      noStroke();
+      fill("#19191D");
+
+      for (let i = 0; i < 4; i++) {
+        rect(i * 15, 0, 7, 62);
+      }
+
+      pop();
+    }
+
+    function inkSplash(x, y, radius, ink, seed) {
+      push();
+      translate(x, y);
+      noStroke();
+      fill(ink);
+
+      beginShape();
+
+      for (let i = 0; i < 80; i++) {
+        const angle = i / 80 * TWO_PI;
+
+        const n = noise(
+          seed + cos(angle) * 2,
+          seed + sin(angle) * 2
+        );
+
+        const r = radius * map(n, 0, 1, 0.35, 1.3);
+
+        vertex(cos(angle) * r, sin(angle) * r);
+      }
+
+      endShape(CLOSE);
+
+      for (let i = 0; i < 9; i++) {
+        const angle = noise(seed + i * 7) * TWO_PI;
+
+        const distance =
+          radius * map(noise(seed + i + 30), 0, 1, 0.8, 1.5);
+
+        const diameter = map(
+          noise(seed + i + 60), 0, 1, 4, 13
+        );
+
+        circle(
+          cos(angle) * distance,
+          sin(angle) * distance,
+          diameter
+        );
+      }
+
+      pop();
+    }
+
+    function drawTitle(colors) {
+      push();
+      translate(185, 47);
+      rotate(-0.06);
+      noStroke();
+
+      fill(colors[0]);
+      rect(6, 7, 300, 48);
+
+      fill("#19191D");
+      rect(0, 0, 300, 48);
+
+      fill("#FFFFFF");
+      textAlign(CENTER, CENTER);
+      textStyle(BOLD);
+      textSize(29);
+      text("INK IN MOTION!", 0, -1);
+      pop();
+    }
+
+    function remixColors() {
+      paletteIndex = (paletteIndex + 1) % palettes.length;
+      trails = [];
+    }
+
+    function updateFinalCapture() {
+      document.getElementById("finalCapture").src =
+        artCanvas.elt.toDataURL("image/png");
+    }
+
+    function mousePressed(event) {
+      if (event && event.target === artCanvas.elt) {
+        remixColors();
+      }
+    }
+  </script>
+
 </body>
 </html>
