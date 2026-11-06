@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Power Budget — AMD PC Builder</title>
+
+  <!-- Loads the p5.js library. -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@2.3.4/lib/p5.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: #0c141b;
+      color: #e7eef1;
+      font-family: Arial, sans-serif;
+    }
+
+    button,
+    select {
+      font: inherit;
+    }
+
+    button,
+    a,
+    select {
+      touch-action: manipulation;
+    }
+
+    button {
+      cursor: pointer;
+      background: transparent;
+      color: #b9c9d0;
+      border: 0;
+    }
+
+    button:focus-visible,
+    select:focus-visible,
+    a:focus-visible {
+      outline: 2px solid #c4f35e;
+      outline-offset: 3px;
+    }
+
+    #page {
+      max-width: 1400px;
+      margin: auto;
+      padding: 0 5%;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding: 28px 0;
+      border-bottom: 1px solid #293b46;
+    }
+
+    .brand {
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #c4f35e;
+    }
+
+    .page-header a {
+      color: #b6c9d3;
+      text-decoration: none;
+      font-size: 12px;
+      margin-left: 18px;
+    }
+
+    .hero {
+      padding: 48px 0 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(45px, 6vw, 80px);
+      line-height: 1;
+      letter-spacing: -3px;
+      margin: 10px 0;
+    }
+
+    .hero h1 span {
+      color: #c4f35e;
+    }
+
+    .hero p {
+      color: #9fb4c1;
+      line-height: 1.8;
+    }
+
+    .eyebrow {
+      font: 10px monospace;
+      letter-spacing: 2px;
+      color: #93aab8;
+    }
+
+    #builder-mount {
+      border: 1px solid #293b46;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #loading {
+      padding: 24px;
+      color: #a7bbc7;
+    }
+
+    #builder {
+      max-width: 1400px;
+      margin: auto;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #293b46;
+      padding: 17px 23px;
+      font: 10px monospace;
+      letter-spacing: 1px;
+    }
+
+    .topline i {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      background: #c4f35e;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .topline button {
+      font: 11px monospace;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.08fr 1fr;
+    }
+
+    .parts {
+      padding: 28px;
+      border-right: 1px solid #293b46;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .section-title > span {
+      color: #8da1ad;
+      font: 10px monospace;
+      border: 1px solid #3b505c;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    h2 {
+      font-size: 20px;
+      letter-spacing: -0.6px;
+      margin: 0;
+    }
+
+    .part-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 23px 0;
+      border-bottom: 1px solid #293b46;
+    }
+
+    .motherboard-row {
+      background: #13221f;
+      margin: 0 -10px;
+      padding-left: 10px;
+      padding-right: 10px;
+      border-radius: 5px;
+    }
+
+    .part-symbol {
+      font: 28px monospace;
+      width: 30px;
+      flex-shrink: 0;
+    }
+
+    .motherboard-row .part-symbol {
+      color: #8cac9b;
+    }
+
+    .part-main {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .part-main label {
+      display: block;
+      color: #8fa7b5;
+      font: 9px monospace;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      border: 1px solid #3e5360;
+      background: #172630;
+      color: #eef3f5;
+      border-radius: 5px;
+      font-size: 13px;
+      padding: 9px 25px 9px 9px;
+      cursor: pointer;
+    }
+
+    .part-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 5px;
+      margin-top: 8px;
+      font: 10px/1.5 Arial, sans-serif;
+      color: #9db0bb;
+    }
+
+    .part-meta a {
+      color: #b8c9d2;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      white-space: nowrap;
+    }
+
+    .rating-basis {
+      font-size: 9px;
+      color: #91a5b1;
+      display: block;
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+
+    .rating-basis a {
+      color: #a1b9b2;
+    }
+
+    .watts {
+      text-align: right;
+      min-width: 50px;
+    }
+
+    .watts b {
+      display: block;
+      font: 22px monospace;
+    }
+
+    .watts span {
+      font: 10px monospace;
+      color: #9aafb9;
+    }
+
+    .reserve {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 19px 0 5px;
+    }
+
+    .reserve-icon {
+      color: #8da0ad;
+      font-size: 22px;
+    }
+
+    .reserve > div {
+      flex: 1;
+    }
+
+    .reserve strong {
+      font-size: 11px;
+      font-weight: normal;
+      color: #c8d5dc;
+    }
+
+    .reserve p {
+      font-size: 9px;
+      line-height: 1.5;
+      color: #8da4af;
+      margin: 5px 0;
+    }
+
+    .reserve > b {
+      font: 15px monospace;
+      color: #a9bcc8;
+      white-space: nowrap;
+    }
+
+    .platform-note {
+      font-size: 10px;
+      line-height: 1.7;
+      color: #8fa5b1;
+      margin-bottom: 0;
+    }
+
+    .result {
+      min-width: 0;
+      padding: 23px;
+      background: #101b24;
+    }
+
+    .scan-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font: 8px monospace;
+      color: #8da7b5;
+      letter-spacing: 0.5px;
+    }
+
+    .scan-title button {
+      font: 9px monospace;
+      border-bottom: 1px solid #5b7280;
+      padding: 3px 0;
+    }
+
+    #computer {
+      width: 100%;
+      max-width: 520px;
+      margin: 12px auto 0;
+    }
+
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    #cpu-summary {
+      text-align: center;
+      padding: 4px 10px 20px;
+      color: #d6e1e7;
+    }
+
+    #cpu-summary strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    #cpu-summary span {
+      display: block;
+      font-size: 10px;
+      color: #91a8b5;
+      margin-top: 5px;
+    }
+
+    .budget {
+      border-top: 1px solid #2e424f;
+      padding-top: 18px;
+    }
+
+    .budget-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .micro {
+      font: 8px monospace;
+      letter-spacing: 1px;
+      color: #8da5b3;
+    }
+
+    .big {
+      margin-top: 8px;
+    }
+
+    .big strong {
+      font: 44px/1 monospace;
+      letter-spacing: -2px;
+      color: #e5f6d0;
+    }
+
+    .big > span {
+      color: #8fa5b0;
+      font: 18px monospace;
+    }
+
+    .capacity-readout {
+      text-align: right;
+    }
+
+    .capacity-readout strong {
+      display: block;
+      font: 21px monospace;
+      margin-top: 12px;
+      color: #acbfc9;
+    }
+
+    #power-bar {
+      height: 13px;
+      background: #233440;
+      display: flex;
+      gap: 2px;
+      margin-top: 21px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    #power-bar span {
+      flex-shrink: 1;
+      transition: width 0.25s;
+    }
+
+    .bar-labels {
+      display: flex;
+      justify-content: space-between;
+      color: #9ab0bd;
+      font: 9px monospace;
+      margin-top: 9px;
+    }
+
+    #status {
+      padding: 15px 16px;
+      margin-top: 21px;
+      border: 1px solid #40553a;
+      background: #1c2a23;
+      border-radius: 5px;
+    }
+
+    #status strong {
+      font-size: 12px;
+      color: #c4f35e;
+    }
+
+    #status p {
+      font-size: 10px;
+      line-height: 1.7;
+      color: #b7c8bd;
+      margin: 7px 0 0;
+    }
+
+    #status.warn {
+      border-color: #70603b;
+      background: #2b281d;
+    }
+
+    #status.warn strong {
+      color: #ffcf85;
+    }
+
+    #status.over {
+      border-color: #774949;
+      background: #302124;
+    }
+
+    #status.over strong {
+      color: #ff9b93;
+    }
+
+    .psu {
+      border-top: 1px solid #293b46;
+      padding: 26px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .psu p {
+      font-size: 11px;
+      color: #91a7b4;
+      margin: 12px 0 0 39px;
+    }
+
+    .psu-options {
+      display: flex;
+      gap: 9px;
+    }
+
+    .psu-options button {
+      min-width: 78px;
+      padding: 12px 13px;
+      border: 1px solid #405562;
+      border-radius: 5px;
+      font: 22px monospace;
+    }
+
+    .psu-options small {
+      display: block;
+      font: 8px monospace;
+      letter-spacing: 1px;
+      margin-top: 5px;
+    }
+
+    .psu-options [aria-pressed="true"] {
+      background: #c4f35e;
+      color: #182317;
+      border-color: #c4f35e;
+    }
+
+    .bottomline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      padding: 16px 28px;
+      border-top: 1px solid #293b46;
+      font-size: 11px;
+      color: #98adb9;
+    }
+
+    .bottomline b {
+      color: #d0e6b5;
+    }
+
+    .bottomline button {
+      color: #c4f35e;
+      font: 10px monospace;
+      white-space: nowrap;
+    }
+
+    .method {
+      padding: 18px 28px;
+      border-top: 1px solid #293b46;
+      font-size: 11px;
+      color: #a9bdc8;
+    }
+
+    .method summary {
+      cursor: pointer;
+    }
+
+    .method p {
+      line-height: 1.8;
+      max-width: 1000px;
+    }
+
+    .method b {
+      color: #d3e0e6;
+    }
+
+    .project-notes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      padding: 55px 0;
+    }
+
+    .project-notes h2 {
+      margin: 14px 0;
+    }
+
+    .project-notes p {
+      font-size: 13px;
+      line-height: 1.8;
+      color: #a7bbc7;
+    }
+
+    .project-notes a,
+    .page-section a {
+      color: #c4f35e;
+    }
+
+    .page-section {
+      padding: 32px 0;
+      border-top: 1px solid #293b46;
+    }
+
+    .page-section h2 {
+      margin-top: 14px;
+    }
+
+    .page-section svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin-top: 25px;
+    }
+
+    .page-section p {
+      font-size: 12px;
+      line-height: 1.8;
+      color: #9fb4c1;
+    }
+
+    .hosted {
+      border: 1px solid #293b46;
+      padding: 20px;
+      margin: 30px 0;
+      border-radius: 7px;
+    }
+
+    .hosted summary {
+      color: #c4f35e;
+      cursor: pointer;
+    }
+
+    .hosted iframe {
+      width: 100%;
+      height: 1100px;
+      border: 0;
+      margin-top: 20px;
+    }
+
+    .page-footer {
+      padding: 25px 0;
+      font: 10px/1.8 monospace;
+      color: #90a6b3;
+      border-top: 1px solid #293b46;
+    }
+
+    @media (max-width: 850px) {
+      .project-notes {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        display: block;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .parts {
+        border-right: 0;
+      }
+
+      .result {
+        border-top: 1px solid #293b46;
+      }
+
+      #computer {
+        max-width: 460px;
+      }
+
+      .psu {
+        display: block;
+      }
+
+      .psu-options {
+        margin-top: 22px;
+      }
+
+      .psu-options button {
+        flex: 1;
+      }
+
+      .bottomline {
+        align-items: flex-start;
+        line-height: 1.6;
+      }
+    }
+
+    @media (max-width: 450px) {
+      .page-header {
+        align-items: flex-start;
+      }
+
+      .page-header a {
+        margin-left: 8px;
+        font-size: 10px;
+      }
+
+      .brand {
+        font-size: 12px;
+      }
+
+      .parts,
+      .result {
+        padding: 20px 16px;
+      }
+
+      .part-row {
+        gap: 9px;
+      }
+
+      .part-symbol {
+        width: 22px;
+        font-size: 22px;
+      }
+
+      .watts {
+        min-width: 42px;
+      }
+
+      .watts b {
+        font-size: 19px;
+      }
+
+      select {
+        font-size: 11px;
+      }
+
+      .part-meta {
+        font-size: 9px;
+      }
+
+      .psu {
+        padding: 22px 16px;
+      }
+
+      .psu-options {
+        gap: 7px;
+      }
+
+      .psu-options button {
+        min-width: 0;
+        font-size: 20px;
+        padding: 12px 10px;
+      }
+
+      .bottomline {
+        padding: 16px;
+        display: block;
+      }
+
+      .bottomline button {
+        margin-top: 12px;
+      }
+
+      .method {
+        padding: 16px;
+      }
+
+      .big strong {
+        font-size: 36px;
+      }
+
+      .topline {
+        padding: 16px;
+        font-size: 9px;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+
+      .psu p {
+        margin-left: 0;
+      }
+
+      .capacity-readout strong {
+        font-size: 19px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="page">
+    <header class="page-header">
+      <div class="brand">P↯WER BUDGET</div>
+
+      <nav>
+        <a href="#builder-mount">Builder</a>
+        <a href="#about">The system</a>
+        <a href="#uml">UML</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">PC PARTS. ONE SHARED LIMIT.</div>
+
+        <h1>
+          Big ideas.<br>
+          <span>Finite watts.</span>
+        </h1>
+      </div>
+
+      <p>
+        Pick your parts. See the power estimate.<br>
+        Find the power supply that fits.<br>
+        <strong>800–1200 W</strong>
+      </p>
+    </section>
+
+    <!-- JavaScript creates the interactive builder here. -->
+    <div id="builder-mount">
+      <p id="loading">
+        Loading the builder…
+        Internet access is needed to load p5.js.
+      </p>
+    </div>
+
+    <section id="about" class="project-notes">
+      <article>
+        <div class="eyebrow">01 / INTENT</div>
+        <h2>One shared power supply.</h2>
+
+        <p>
+          This project makes PC power planning visible. Choose real AMD
+          processors, matching motherboards, graphics cards, storage and
+          fans. Their combined planning load competes for the same
+          800–1200 W power supply.
+        </p>
+
+        <p>
+          The component selection and running summary are inspired by
+          <a
+            href="https://www.microcenter.com/site/content/custom-pc-builder.aspx"
+            target="_blank"
+            rel="noopener"
+          >Micro Center’s PC Builder</a>.
+          The focus here is understanding power.
+        </p>
+      </article>
+
+      <article>
+        <div class="eyebrow">02 / PROCESS</div>
+        <h2>Specs → objects → graphics.</h2>
+
+        <p>
+          Component objects store each part’s specification and quantity.
+          PCBuild combines the loads, Motherboard checks the CPU socket,
+          and PowerSupply tracks available capacity. PowerFlow draws
+          the computer and its animated connections using p5.js.
+        </p>
+
+        <p>
+          Manufacturer links sit beside the controls. Published ratings
+          and project assumptions are labeled separately. Motherboard
+          power is included in the platform allowance.
+        </p>
+      </article>
+
+      <article>
+        <div class="eyebrow">03 / EMERGING BEHAVIOR</div>
+        <h2>Small choices. A collective limit.</h2>
+
+        <p>
+          A part can fit within the power budget on its own, while its
+          combination with other parts exceeds the supply. The warning
+          emerges from the combined load and shared capacity.
+        </p>
+
+        <p>
+          Try the demanding build. Compare 800 W with 1200 W, then replace
+          the RTX 5090 with the RTX 5070. The total, remaining watts and
+          status change together.
+        </p>
+      </article>
+    </section>
+
+    <section id="uml" class="page-section">
+      <div class="eyebrow">04 / UML CLASS DIAGRAM</div>
+      <h2>A small, readable model.</h2>
+
+      <!-- Inline SVG: no separate diagram file is required. -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 1020 550"
+        role="img"
+        aria-labelledby="uml-title uml-description"
+      >
+        <title id="uml-title">Power Budget UML class diagram</title>
+
+        <desc id="uml-description">
+          PCBuild owns five Component groups, one PowerSupply and one
+          Motherboard. PowerFlow references PCBuild.
+        </desc>
+
+        <defs>
+          <marker
+            id="diamond"
+            viewBox="0 0 16 12"
+            refX="1"
+            refY="6"
+            markerWidth="16"
+            markerHeight="12"
+            orient="auto-start-reverse"
+          >
+            <path d="M1 6 8 1 15 6 8 11Z" fill="#c4f35e"/>
+          </marker>
+
+          <marker
+            id="arrow"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="10"
+            markerHeight="10"
+            orient="auto"
+          >
+            <path
+              d="M1 1 9 5 1 9"
+              stroke="#79cbff"
+              fill="none"
+            />
+          </marker>
+        </defs>
+
+        <rect
+          width="1020"
+          height="550"
+          rx="8"
+          fill="#101b24"
+        />
+
+        <g font-family="monospace" font-size="12" fill="#c8d9e4">
+          <!-- Component -->
+          <rect
+            x="32" y="45" width="270" height="170" rx="4"
+            fill="#172833" stroke="#466170"
+          />
+
+          <text x="50" y="75" font-size="17" fill="#c4f35e">
+            Component
+          </text>
+
+          <path d="M32 90h270M32 170h270" stroke="#466170"/>
+
+          <text x="50" y="115">+ kind: string</text>
+          <text x="50" y="137">+ spec: {name, watts, source}</text>
+          <text x="50" y="159">+ quantity: number</text>
+          <text x="50" y="197">+ power(): watts × quantity</text>
+
+          <!-- PCBuild -->
+          <rect
+            x="377" y="45" width="270" height="235" rx="4"
+            fill="#172833" stroke="#466170"
+          />
+
+          <text x="395" y="75" font-size="17" fill="#c4f35e">
+            PCBuild
+          </text>
+
+          <path d="M377 90h270M377 172h270" stroke="#466170"/>
+
+          <text x="395" y="115">+ components: Component[5]</text>
+          <text x="395" y="137">+ psu: PowerSupply</text>
+          <text x="395" y="159">+ motherboard: Motherboard</text>
+          <text x="395" y="197">+ choose(kind, index)</text>
+          <text x="395" y="219">+ total() / status()</text>
+          <text x="395" y="241">+ suggested() / reset()</text>
+          <text x="395" y="263">+ get(kind): Component</text>
+
+          <!-- PowerSupply -->
+          <rect
+            x="722" y="45" width="270" height="170" rx="4"
+            fill="#172833" stroke="#466170"
+          />
+
+          <text x="740" y="75" font-size="17" fill="#c4f35e">
+            PowerSupply
+          </text>
+
+          <path d="M722 90h270M722 126h270" stroke="#466170"/>
+
+          <text x="740" y="115">+ capacity: 800..1200 W</text>
+          <text x="740" y="153">+ headroom(load): watts</text>
+          <text x="740" y="180">+ utilization(load): ratio</text>
+
+          <!-- Composition connections -->
+          <path
+            d="M377 119H302"
+            fill="none"
+            stroke="#c4f35e"
+            stroke-width="1.5"
+            marker-start="url(#diamond)"
+          />
+
+          <text x="347" y="106" fill="#93adbc">1</text>
+          <text x="310" y="106" fill="#93adbc">5</text>
+
+          <path
+            d="M647 119H722"
+            fill="none"
+            stroke="#c4f35e"
+            stroke-width="1.5"
+            marker-start="url(#diamond)"
+          />
+
+          <text x="671" y="106" fill="#93adbc">1</text>
+          <text x="707" y="106" fill="#93adbc">1</text>
+
+          <!-- Motherboard -->
+          <rect
+            x="32" y="330" width="270" height="155" rx="4"
+            fill="#172833" stroke="#466170"
+          />
+
+          <text x="50" y="360" font-size="17" fill="#c4f35e">
+            Motherboard
+          </text>
+
+          <path d="M32 375h270M32 429h270" stroke="#466170"/>
+
+          <text x="50" y="398">+ spec: {socket, chipset,</text>
+          <text x="50" y="418">  name, memory, source}</text>
+          <text x="50" y="454">+ supports(cpu): boolean</text>
+
+          <path
+            d="M377 244H338V310H167V330"
+            fill="none"
+            stroke="#c4f35e"
+            stroke-width="1.5"
+            marker-start="url(#diamond)"
+          />
+
+          <text x="344" y="235" fill="#93adbc">1</text>
+          <text x="179" y="325" fill="#93adbc">1</text>
+
+          <!-- PowerFlow -->
+          <rect
+            x="377" y="330" width="270" height="130" rx="4"
+            fill="#172833" stroke="#466170"
+          />
+
+          <text x="395" y="360" font-size="17" fill="#c4f35e">
+            PowerFlow
+          </text>
+
+          <path d="M377 375h270M377 412h270" stroke="#466170"/>
+
+          <text x="395" y="398">+ build: PCBuild / phase</text>
+          <text x="395" y="439">+ update(dt) / draw()</text>
+
+          <path
+            d="M512 330V280"
+            fill="none"
+            stroke="#79cbff"
+            stroke-width="1.5"
+            marker-end="url(#arrow)"
+          />
+
+          <text x="524" y="297" font-size="11" fill="#93adbc">
+            reads &amp; visualizes
+          </text>
+
+          <text x="722" y="338" font-size="11" fill="#93adbc">
+            User controls call choose()
+          </text>
+
+          <text x="722" y="360" font-size="11" fill="#93adbc">
+            or change PSU capacity.
+          </text>
+
+          <text x="722" y="408" font-size="11" fill="#93adbc">
+            ◆ composition / ownership
+          </text>
+
+          <text x="722" y="430" font-size="11" fill="#93adbc">
+            → reference
+          </text>
+
+          <text x="32" y="522" font-size="11" fill="#93adbc">
+            5 load groups: CPU / GPU / SSDs / fans / platform allowance
+          </text>
+        </g>
+      </svg>
+
+      <p>
+        Filled diamond: composition / ownership. Arrow: reference.
+        Motherboard power is included in the platform allowance.
+      </p>
+    </section>
+
+    <section class="page-section">
+      <div class="eyebrow">05 / HOSTED P5.JS SKETCH</div>
+      <h2>Explore the original sketch.</h2>
+
+      <p>
+        <a
+          href="https://editor.p5js.org/TWangD/sketches/2TNm0n3X4"
+          target="_blank"
+          rel="noopener"
+        >Open in the p5.js editor ↗</a>
+      </p>
+
+      <details class="hosted">
+        <summary>Show the sketch embedded from p5.js</summary>
+
+        <iframe
+          src="https://editor.p5js.org/TWangD/full/2TNm0n3X4"
+          title="Power Budget hosted p5.js sketch"
+          loading="lazy"
+        ></iframe>
+      </details>
+    </section>
+
+    <footer class="page-footer">
+      POWER BUDGET / OBJECT-ORIENTED SYSTEMS<br>
+      Specs checked November 5, 2026 · Planning estimates, not live measurements.
+    </footer>
+  </div>
+
+  <script>
+    /*
+      POWER BUDGET
+
+      Published ratings are planning inputs, not measured consumption.
+
+      Modeling assumptions:
+      - AMD CPU allowance = published TDP × 1.35, rounded up.
+      - Motherboard, memory and other hardware share a 60 W allowance.
+      - Suggested PSU leaves at least 20% spare capacity.
+    */
+
+    // ------------------------------------------------------------
+    // PRODUCT DATA
+    // ------------------------------------------------------------
+
+    const AMD_BASE =
+      "https://www.amd.com/en/products/processors/desktops/ryzen/9000-series/";
+
+    const SOURCES = {
+      nvidia50:
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5070-family/",
+      nvidia80:
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5080/",
+      nvidia90:
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/50-series/rtx-5090/",
+      samsung:
+        "https://www.samsung.com/us/memory-storage/nvme-ssd/990-pro-2tb-nvme-pcie-gen-4-mz-v9p2t0b-am/",
+      noctua:
+        "https://www.noctua.at/en/products/nf-a12x25-pwm/specifications"
+    };
+
+    const PARTS = {
+      cpu: [
+        {
+          name: "AMD Ryzen 9 9950X3D2 Dual Edition",
+          short: "9950X3D2",
+          cores: 16,
+          threads: 32,
+          tdp: 200,
+          watts: 270,
+          tier: "Flagship · 2026",
+          socket: "AM5",
+          detail: "16 cores / 32 threads · AM5",
+          basis: "200 W published TDP · 270 W planning allowance",
+          source: AMD_BASE + "amd-ryzen-9-9950x3d2-dual-edition.html",
+          board: 0
+        },
+        {
+          name: "AMD Ryzen 7 9850X3D",
+          short: "9850X3D",
+          cores: 8,
+          threads: 16,
+          tdp: 120,
+          watts: 162,
+          tier: "High-end gaming · 2026",
+          socket: "AM5",
+          detail: "8 cores / 16 threads · AM5",
+          basis: "120 W published TDP · 162 W planning allowance",
+          source: AMD_BASE + "amd-ryzen-7-9850x3d.html",
+          board: 0
+        },
+        {
+          name: "AMD Ryzen 9 9900X",
+          short: "9900X",
+          cores: 12,
+          threads: 24,
+          tdp: 120,
+          watts: 162,
+          tier: "High-end productivity",
+          socket: "AM5",
+          detail: "12 cores / 24 threads · AM5",
+          basis: "120 W published TDP · 162 W planning allowance",
+          source: AMD_BASE + "amd-ryzen-9-9900x.html",
+          board: 0
+        },
+        {
+          name: "AMD Ryzen 7 9700X",
+          short: "9700X",
+          cores: 8,
+          threads: 16,
+          tdp: 65,
+          watts: 88,
+          tier: "Mid-range",
+          socket: "AM5",
+          detail: "8 cores / 16 threads · AM5",
+          basis: "65 W published TDP · 88 W planning allowance",
+          source: AMD_BASE + "amd-ryzen-7-9700X.html",
+          board: 1
+        },
+        {
+          name: "AMD Ryzen 5 9600",
+          short: "9600",
+          cores: 6,
+          threads: 12,
+          tdp: 65,
+          watts: 88,
+          tier: "Entry tier",
+          socket: "AM5",
+          detail: "6 cores / 12 threads · AM5",
+          basis: "65 W published TDP · 88 W planning allowance",
+          source:
+            "https://www.amd.com/en/partner/articles/ryzen-9000-series-processors.html",
+          board: 1
+        }
+      ],
+
+      gpu: [
+        {
+          name: "GeForce RTX 5070",
+          watts: 250,
+          minimum: 650,
+          detail: "12 GB GDDR7",
+          basis: "Total Graphics Power",
+          source: SOURCES.nvidia50
+        },
+        {
+          name: "GeForce RTX 5070 Ti",
+          watts: 300,
+          minimum: 750,
+          detail: "16 GB GDDR7",
+          basis: "Total Graphics Power",
+          source: SOURCES.nvidia50
+        },
+        {
+          name: "GeForce RTX 5080",
+          watts: 360,
+          minimum: 850,
+          detail: "16 GB GDDR7",
+          basis: "Total Graphics Power",
+          source: SOURCES.nvidia80
+        },
+        {
+          name: "GeForce RTX 5090",
+          watts: 575,
+          minimum: 1000,
+          detail: "32 GB GDDR7",
+          basis: "Total Graphics Power",
+          source: SOURCES.nvidia90
+        }
+      ],
+
+      storage: {
+        name: "Samsung 990 PRO 2 TB",
+        watts: 8.5,
+        basis: "Maximum burst power / drive",
+        source: SOURCES.samsung
+      },
+
+      fans: {
+        name: "Noctua NF-A12x25 PWM",
+        watts: 1.68,
+        basis: "Maximum input power / fan",
+        source: SOURCES.noctua
+      }
+    };
+
+    const BOARDS = [
+      {
+        name: "MSI MAG X870 TOMAHAWK WIFI",
+        socket: "AM5",
+        chipset: "X870",
+        size: "ATX",
+        memory: "DDR5",
+        source:
+          "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/Specification",
+        support:
+          "https://www.msi.com/Motherboard/MAG-X870-TOMAHAWK-WIFI/support#cpu"
+      },
+      {
+        name: "MSI MAG B850 TOMAHAWK MAX WIFI",
+        socket: "AM5",
+        chipset: "B850",
+        size: "ATX",
+        memory: "DDR5",
+        source:
+          "https://www.msi.com/Motherboard/MAG-B850-TOMAHAWK-MAX-WIFI/Specification",
+        support:
+          "https://www.msi.com/Motherboard/MAG-B850-TOMAHAWK-MAX-WIFI/support#cpu"
+      }
+    ];
+
+    const COLORS = [
+      "#c4f35e",
+      "#79cbff",
+      "#d5b4fc",
+      "#ffca8a",
+      "#677a87"
+    ];
+
+    const CAPACITIES = [800, 850, 1000, 1200];
+
+    function formatW(number) {
+      return Number(number.toFixed(2)).toLocaleString("en-US", {
+        maximumFractionDigits: 2
+      });
+    }
+
+    // ------------------------------------------------------------
+    // OBJECT-ORIENTED SYSTEM
+    // ------------------------------------------------------------
+
+    class Component {
+      constructor(kind, spec, quantity = 1) {
+        this.kind = kind;
+        this.spec = spec;
+        this.quantity = quantity;
+      }
+
+      power() {
+        return this.spec.watts * this.quantity;
+      }
+    }
+
+    class PowerSupply {
+      constructor(capacity = 850) {
+        this.capacity = capacity;
+      }
+
+      headroom(load) {
+        return this.capacity - load;
+      }
+
+      utilization(load) {
+        return load / this.capacity;
+      }
+    }
+
+    class Motherboard {
+      constructor(spec) {
+        this.spec = spec;
+      }
+
+      supports(cpu) {
+        return this.spec.socket === cpu.socket;
+      }
+    }
+
+    class PCBuild {
+      constructor() {
+        this.psu = new PowerSupply();
+        this.reset();
+      }
+
+      reset() {
+        this.components = [
+          new Component("cpu", PARTS.cpu[3]),
+          new Component("gpu", PARTS.gpu[1]),
+          new Component("storage", PARTS.storage),
+          new Component("fans", PARTS.fans, 4),
+          new Component("platform", {
+            name: "Motherboard, RAM & other hardware",
+            watts: 60,
+            basis: "Estimated planning reserve"
+          })
+        ];
+
+        this.psu.capacity = 850;
+
+        this.motherboard = new Motherboard(
+          BOARDS[PARTS.cpu[3].board]
+        );
+      }
+
+      choose(kind, index) {
+        if (kind === "motherboard") {
+          const board = BOARDS[index];
+
+          if (!board || board.socket !== this.get("cpu").spec.socket) {
+            throw new Error("Motherboard socket does not match CPU");
+          }
+
+          this.motherboard = new Motherboard(board);
+          return;
+        }
+
+        const component = this.get(kind);
+
+        if (!component) {
+          throw new Error("Unknown component");
+        }
+
+        if (kind === "cpu" || kind === "gpu") {
+          if (!PARTS[kind][index]) {
+            throw new Error("Unknown part");
+          }
+
+          component.spec = PARTS[kind][index];
+
+          if (kind === "cpu") {
+            this.motherboard = new Motherboard(
+              BOARDS[component.spec.board]
+            );
+          }
+        } else {
+          const allowed = kind === "storage" ? [1, 2] : [2, 4, 6];
+
+          if (!allowed.includes(index)) {
+            throw new Error("Invalid quantity");
+          }
+
+          component.quantity = index;
+        }
+      }
+
+      compatibleBoards() {
+        return BOARDS.filter(
+          board => board.socket === this.get("cpu").spec.socket
+        );
+      }
+
+      get(kind) {
+        return this.components.find(
+          component => component.kind === kind
+        );
+      }
+
+      total() {
+        return this.components.reduce(
+          (sum, component) => sum + component.power(),
+          0
+        );
+      }
+
+      status() {
+        const total = this.total();
+
+        if (total > this.psu.capacity) {
+          return {
+            label: "Over the power budget",
+            type: "over",
+            text:
+              `The selected ratings exceed this supply by ` +
+              `${formatW(total - this.psu.capacity)} W. ` +
+              `Choose a larger PSU or lower-power parts.`
+          };
+        }
+
+        const gpuMinimum = this.get("gpu").spec.minimum;
+
+        if (this.psu.capacity < gpuMinimum) {
+          return {
+            label: "Below GPU maker’s PSU guidance",
+            type: "warn",
+            text:
+              `NVIDIA lists ${gpuMinimum} W required system power ` +
+              `for this GPU’s reference configuration. ` +
+              `The wattage sum alone is not enough.`
+          };
+        }
+
+        if (this.psu.utilization(total) > 0.8) {
+          return {
+            label: "Fits, with limited spare capacity",
+            type: "warn",
+            text:
+              "The estimate fits, but leaves less than the " +
+              "project’s 20% spare-capacity target."
+          };
+        }
+
+        return {
+          label: "Within the power budget",
+          type: "good",
+          text:
+            "The estimate fits, meets the GPU maker’s PSU guidance, " +
+            "and leaves at least 20% spare capacity."
+        };
+      }
+
+      suggested() {
+        const required = Math.max(
+          this.total() / 0.8,
+          this.get("gpu").spec.minimum
+        );
+
+        return CAPACITIES.find(watts => watts >= required) || null;
+      }
+    }
+
+    class PowerFlow {
+      constructor(build) {
+        this.build = build;
+        this.phase = 0;
+      }
+
+      update(dt) {
+        this.phase = (this.phase + dt * 0.25) % 1;
+      }
+
+      draw() {
+        drawComputer(this.build, this.phase);
+      }
+    }
+
+    // ------------------------------------------------------------
+    // P5.JS SETUP AND USER INTERFACE
+    // ------------------------------------------------------------
+
+    let build;
+    let flow;
+    let uiRoot;
+    let scaleFactor = 1;
+    let paused = false;
+
+    function setup() {
+      document.getElementById("loading")?.remove();
+
+      build = new PCBuild();
+      flow = new PowerFlow(build);
+
+      uiRoot = document.createElement("section");
+      uiRoot.id = "builder";
+
+      uiRoot.innerHTML = `
+        <div class="topline">
+          <span><i></i> INTERACTIVE PC BUILDER</span>
+          <button id="reset">Reset build ↺</button>
+        </div>
+
+        <div class="layout">
+          <section class="parts">
+            <div class="section-title">
+              <span>01</span>
+              <h2>Pick your components.</h2>
+            </div>
+
+            <div id="part-controls"></div>
+
+            <div class="reserve">
+              <span class="reserve-icon">＋</span>
+
+              <div>
+                <strong>Motherboard, memory & other hardware</strong>
+                <p>
+                  60 W planning allowance · estimate, not a product spec
+                </p>
+              </div>
+
+              <b>60 W</b>
+            </div>
+
+            <p class="platform-note">
+              Motherboards match the CPU socket and family. Check the
+              linked CPU support list for the required BIOS, especially
+              for 2026 chips. All boards use DDR5. Cooler, memory,
+              connectors, and case fit need separate checks.
+            </p>
+          </section>
+
+          <section class="result">
+            <div class="scan-title">
+              <span>YOUR BUILD / POWER DISTRIBUTION</span>
+              <button id="motion" aria-pressed="false">
+                Pause animation
+              </button>
+            </div>
+
+            <div id="computer"></div>
+            <div id="cpu-summary"></div>
+
+            <div class="budget">
+              <div class="budget-heading">
+                <div>
+                  <span class="micro">ESTIMATED COMPONENT LOAD</span>
+
+                  <div class="big">
+                    <strong id="total">0</strong><span> W</span>
+                  </div>
+                </div>
+
+                <div class="capacity-readout">
+                  <span class="micro">PSU CAPACITY</span>
+                  <strong id="capacity">850 W</strong>
+                </div>
+              </div>
+
+              <div
+                id="power-bar"
+                role="img"
+                aria-label="Component load relative to power supply"
+              ></div>
+
+              <div class="bar-labels">
+                <span id="utilization"></span>
+                <span id="headroom"></span>
+              </div>
+
+              <div id="status" role="status" aria-live="polite"></div>
+            </div>
+          </section>
+        </div>
+
+        <section class="psu">
+          <div>
+            <div class="section-title">
+              <span>02</span>
+              <h2>Choose the power supply.</h2>
+            </div>
+
+            <p>Capacity is a ceiling, not constant consumption.</p>
+          </div>
+
+          <div
+            class="psu-options"
+            role="group"
+            aria-label="Power supply capacity"
+          >
+            ${CAPACITIES.map(watts => `
+              <button
+                data-watts="${watts}"
+                aria-pressed="${watts === 850}"
+              >
+                ${watts}<small>WATTS</small>
+              </button>
+            `).join("")}
+          </div>
+        </section>
+
+        <div class="bottomline">
+          <span id="suggested"></span>
+          <button id="demanding">Try a demanding build ↗</button>
+        </div>
+
+        <details class="method">
+          <summary>How is the power estimate calculated?</summary>
+
+          <p>
+            <b>
+              CPU planning power + GPU graphics power +
+              SSD burst power × quantity +
+              fan maximum power × quantity +
+              60 W platform reserve.
+            </b>
+          </p>
+
+          <p>
+            <b>AMD:</b> published TDP is shown separately. This project
+            budgets 1.35 × TDP, rounded up:
+            200 → 270 W, 120 → 162 W, and 65 → 88 W.
+            That multiplier is a modeling allowance, not a verified PPT
+            specification or measured draw. Stock settings are assumed;
+            PBO, Eco Mode, and optional 105 W modes are excluded.
+          </p>
+
+          <p>
+            Motherboard draw is included in the 60 W reserve, so switching
+            boards does not invent a wattage difference. Cooler and pump
+            requirements need separate assessment.
+          </p>
+
+          <p>
+            These are different manufacturer rating types used as planning
+            inputs, not measured simultaneous draw or a guaranteed upper
+            bound. Real demand varies with workload, BIOS settings,
+            board design, and transient spikes.
+          </p>
+
+          <p>
+            The 60 W reserve is an explicit assumption.
+            The 20% spare-capacity target is a project heuristic.
+            PSU capacity is DC output, not wall-socket input.
+            NVIDIA’s required system-power guidance is checked separately.
+            GPU figures describe reference designs; partner cards may differ.
+          </p>
+
+          <p>
+            Specifications checked November 5, 2026.
+            Source links appear beside each component.
+            This is a power-budget study, not a complete shopping or
+            compatibility tool. Tier labels describe product roles,
+            not a benchmark ranking or live price comparison.
+          </p>
+        </details>
+      `;
+
+      document.getElementById("builder-mount").appendChild(uiRoot);
+
+      renderControls();
+
+      uiRoot.querySelectorAll("[data-watts]").forEach(button => {
+        button.addEventListener("click", () => {
+          build.psu.capacity = Number(button.dataset.watts);
+          renderSummary();
+        });
+      });
+
+      document.getElementById("reset").onclick = () => {
+        build.reset();
+        renderControls();
+        renderSummary();
+      };
+
+      document.getElementById("demanding").onclick = () => {
+        build.choose("cpu", 0);
+        build.choose("gpu", 3);
+        build.choose("storage", 2);
+        build.choose("fans", 6);
+
+        renderControls();
+        renderSummary();
+      };
+
+      document.getElementById("motion").onclick = event => {
+        paused = !paused;
+
+        event.target.textContent = paused
+          ? "Resume animation"
+          : "Pause animation";
+
+        event.target.setAttribute("aria-pressed", String(paused));
+      };
+
+      const width = document.getElementById("computer").clientWidth;
+
+      pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
+
+      const canvas = createCanvas(width, width * 0.72);
+      canvas.parent("computer");
+
+      canvas.elt.setAttribute(
+        "aria-label",
+        "PC case schematic with CPU, graphics card, drives, fans, " +
+        "and shared power supply. Ratings and totals appear in the controls."
+      );
+
+      scaleFactor = width / 600;
+
+      frameRate(30);
+      renderSummary();
+    }
+
+    function renderControls() {
+      const board = build.motherboard.spec;
+
+      const boardRow = `
+        <div class="part-row motherboard-row">
+          <div class="part-symbol">▤</div>
+
+          <div class="part-main">
+            <label for="pick-motherboard">MATCHING MOTHERBOARD</label>
+
+            <select id="pick-motherboard">
+              ${build.compatibleBoards().map(item => `
+                <option
+                  value="${BOARDS.indexOf(item)}"
+                  ${item === board ? "selected" : ""}
+                >
+                  ${item.name}
+                </option>
+              `).join("")}
+            </select>
+
+            <div class="part-meta">
+              <span>
+                ✓ ${board.socket} · ${board.chipset} ·
+                ${board.memory} · ${board.size}
+              </span>
+
+              <a href="${board.source}" target="_blank" rel="noopener">
+                Specs ↗
+              </a>
+            </div>
+
+            <small class="rating-basis">
+              Power included in 60 W platform allowance ·
+              <a href="${board.support}" target="_blank" rel="noopener">
+                CPU / BIOS support ↗
+              </a>
+            </small>
+          </div>
+        </div>
+      `;
+
+      const kinds = ["cpu", "gpu", "storage", "fans"];
+
+      const labels = [
+        "PROCESSOR / 5 AMD OPTIONS",
+        "GRAPHICS CARD",
+        "STORAGE",
+        "COOLING FANS"
+      ];
+
+      const symbols = ["▦", "▰", "▱", "✳"];
+
+      document.getElementById("part-controls").innerHTML =
+        kinds.map((kind, index) => {
+          const component = build.get(kind);
+          let options;
+
+          if (kind === "cpu" || kind === "gpu") {
+            options = PARTS[kind].map((part, partIndex) => `
+              <option
+                value="${partIndex}"
+                ${component.spec === part ? "selected" : ""}
+              >
+                ${part.name}
+              </option>
+            `).join("");
+
+            if (kind === "cpu") {
+              options = `
+                <optgroup label="AMD — premium to entry">
+                  ${options}
+                </optgroup>
+              `;
+            }
+          } else {
+            const quantities = kind === "storage" ? [1, 2] : [2, 4, 6];
+
+            options = quantities.map(quantity => `
+              <option
+                value="${quantity}"
+                ${component.quantity === quantity ? "selected" : ""}
+              >
+                ${quantity} × ${component.spec.name}
+              </option>
+            `).join("");
+          }
+
+          const perUnit = component.quantity > 1
+            ? ` · ${formatW(component.spec.watts)} W each`
+            : "";
+
+          return `
+            <div class="part-row">
+              <div
+                class="part-symbol"
+                style="color:${COLORS[index]}"
+              >${symbols[index]}</div>
+
+              <div class="part-main">
+                <label for="pick-${kind}">${labels[index]}</label>
+
+                <select id="pick-${kind}">
+                  ${options}
+                </select>
+
+                <div class="part-meta">
+                  <span>
+                    ${component.spec.detail || component.spec.basis}
+                  </span>
+
+                  <a
+                    href="${component.spec.source}"
+                    target="_blank"
+                    rel="noopener"
+                  >Specs ↗</a>
+                </div>
+
+                <small class="rating-basis">
+                  ${component.spec.basis}${perUnit}
+                </small>
+              </div>
+
+              <div class="watts" style="color:${COLORS[index]}">
+                <b>${formatW(component.power())}</b>
+                <span>${kind === "cpu" ? "W EST." : "W"}</span>
+              </div>
+            </div>
+
+            ${kind === "cpu" ? boardRow : ""}
+          `;
+        }).join("");
+
+      for (const kind of ["cpu", "motherboard", "gpu", "storage", "fans"]) {
+        document.getElementById("pick-" + kind).onchange = event => {
+          build.choose(kind, Number(event.target.value));
+
+          renderControls();
+          renderSummary();
+
+          document.getElementById("pick-" + kind).focus();
+        };
+      }
+    }
+
+    function renderSummary() {
+      const cpu = build.get("cpu").spec;
+      const total = build.total();
+      const capacity = build.psu.capacity;
+      const status = build.status();
+
+      document.getElementById("cpu-summary").innerHTML = `
+        <strong>${cpu.name}</strong>
+        <span>
+          ${cpu.tier} · ${build.motherboard.spec.chipset} / ${cpu.socket}
+        </span>
+      `;
+
+      document.getElementById("total").textContent = formatW(total);
+      document.getElementById("capacity").textContent = capacity + " W";
+
+      document.getElementById("utilization").textContent =
+        (total / capacity * 100).toFixed(1) + "% of capacity";
+
+      document.getElementById("headroom").textContent =
+        total > capacity
+          ? formatW(total - capacity) + " W over budget"
+          : formatW(capacity - total) + " W remaining";
+
+      document.getElementById("power-bar").innerHTML =
+        build.components.map((component, index) => `
+          <span
+            title="${component.spec.name}: ${formatW(component.power())} W"
+            style="
+              background:${COLORS[index]};
+              width:${component.power() / Math.max(capacity, total) * 100}%;
+            "
+          ></span>
+        `).join("");
+
+      document.getElementById("power-bar").setAttribute(
+        "aria-label",
+        `${formatW(total)} watts estimated out of ${capacity} watts capacity`
+      );
+
+      const statusElement = document.getElementById("status");
+      statusElement.className = status.type;
+
+      statusElement.innerHTML = `
+        <strong>
+          ${status.type === "good" ? "✓" : "!"} ${status.label}
+        </strong>
+        <p>${status.text}</p>
+      `;
+
+      document.querySelectorAll("[data-watts]").forEach(button => {
+        button.setAttribute(
+          "aria-pressed",
+          String(Number(button.dataset.watts) === capacity)
+        );
+      });
+
+      document.getElementById("suggested").innerHTML = `
+        <b>${build.suggested() || "More than 1200"} W</b>
+        meets the model’s reserve target and GPU guidance.
+      `;
+    }
+
+    // ------------------------------------------------------------
+    // P5.JS ANIMATION
+    // ------------------------------------------------------------
+
+    function draw() {
+      background("#101b24");
+
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+
+      if (!paused && !reducedMotion) {
+        flow.update(Math.min(deltaTime / 1000, 0.05));
+      }
+
+      push();
+      scale(scaleFactor);
+      flow.draw();
+      pop();
+    }
+
+    function windowResized() {
+      const container = document.getElementById("computer");
+
+      if (!container) {
+        return;
+      }
+
+      const width = container.clientWidth;
+
+      resizeCanvas(width, width * 0.72);
+      scaleFactor = width / 600;
+    }
+
+    function drawComputer(pc, time) {
+      // Background grid.
+      stroke("#233640");
+      strokeWeight(0.5);
+
+      for (let x = 20; x < 600; x += 24) {
+        line(x, 0, x, 432);
+      }
+
+      for (let y = 10; y < 432; y += 24) {
+        line(0, y, 600, y);
+      }
+
+      // Computer case.
+      stroke("#536c79");
+      strokeWeight(2);
+      fill("#14232d");
+      rect(108, 25, 354, 365, 12);
+
+      fill("#0e171f");
+      rect(123, 40, 321, 328, 5);
+
+      // Motherboard.
+      stroke("#2e4655");
+      fill("#192c38");
+      rect(145, 59, 212, 210, 5);
+
+      stroke("#2e4854");
+
+      for (let y = 78; y < 250; y += 19) {
+        line(155, y, 343, y);
+      }
+
+      for (let x = 170; x < 340; x += 25) {
+        line(x, 68, x, 260);
+      }
+
+      // Shared power connections.
+      const targets = [
+        [241, 129],
+        [256, 245],
+        [328, 190],
+        [396, 107],
+        [179, 296]
+      ];
+
+      const start = [230, 338];
+
+      for (let i = 0; i < targets.length; i++) {
+        const target = targets[i];
+
+        stroke(COLORS[i]);
+        strokeWeight(1.5);
+        noFill();
+
+        beginShape();
+        vertex(start[0], start[1]);
+        vertex(start[0], target[1] + 22);
+        vertex(target[0], target[1] + 22);
+        vertex(target[0], target[1]);
+        endShape();
+
+        const phase = (time + i * 0.17) % 1;
+
+        const x = start[0] + (target[0] - start[0]) * phase;
+        const y = start[1] + (target[1] - start[1]) * phase;
+
+        noStroke();
+        fill(COLORS[i]);
+        circle(x, y, 4);
+      }
+
+      // CPU.
+      drawCpuPackage(pc.get("cpu").spec, 209, 90, 64);
+
+      noStroke();
+      fill(COLORS[0]);
+      textFont("monospace");
+      textAlign(CENTER);
+      textSize(9);
+      text(pc.get("cpu").power() + " W est.", 241, 183);
+
+      // Motherboard label.
+      textAlign(LEFT);
+      fill("#93aab5");
+      textSize(8);
+
+      text(
+        pc.motherboard.spec.chipset + " / " +
+        pc.motherboard.spec.socket + " / DDR5",
+        151,
+        76
+      );
+
+      // Graphics card.
+      fill("#143041");
+      stroke(COLORS[1]);
+      rect(151, 216, 210, 61, 4);
+
+      for (const x of [184, 240, 296]) {
+        noFill();
+        stroke("#72b8d8");
+        circle(x, 246, 38);
+        circle(x, 246, 12);
+
+        for (let blade = 0; blade < 6; blade++) {
+          const angle = blade * Math.PI / 3 + time * 6;
+
+          line(
+            x + Math.cos(angle) * 8,
+            246 + Math.sin(angle) * 8,
+            x + Math.cos(angle + 0.5) * 16,
+            246 + Math.sin(angle + 0.5) * 16
+          );
+        }
+      }
+
+      noStroke();
+      fill(COLORS[1]);
+      textAlign(LEFT);
+      textSize(10);
+      text("GPU / " + pc.get("gpu").power() + " W", 154, 208);
+
+      // Storage.
+      for (let i = 0; i < pc.get("storage").quantity; i++) {
+        fill("#382c49");
+        stroke(COLORS[2]);
+        rect(305, 170 + i * 18, 41, 12, 2);
+      }
+
+      noStroke();
+      fill(COLORS[2]);
+      textSize(9);
+      text("SSD", 311, 162);
+
+      // Symbolic case fans.
+      for (let i = 0; i < 3; i++) {
+        const centerX = 397;
+        const centerY = 106 + i * 83;
+
+        fill("#16262d");
+        stroke(COLORS[3]);
+        circle(centerX, centerY, 58);
+
+        noFill();
+        circle(centerX, centerY, 42);
+
+        for (let blade = 0; blade < 5; blade++) {
+          const angle = blade * Math.PI * 2 / 5 + time * 8;
+
+          line(
+            centerX + Math.cos(angle) * 8,
+            centerY + Math.sin(angle) * 8,
+            centerX + Math.cos(angle + 0.5) * 20,
+            centerY + Math.sin(angle + 0.5) * 20
+          );
+        }
+
+        fill(COLORS[3]);
+        circle(centerX, centerY, 8);
+      }
+
+      noStroke();
+      fill("#b4c4ca");
+      textSize(9);
+      textAlign(CENTER);
+      text(pc.get("fans").quantity + " FANS", 397, 327);
+
+      // Power supply.
+      stroke(
+        pc.status().type === "over" ? "#ff8b83" : "#94b85c"
+      );
+
+      fill("#243526");
+      rect(145, 311, 170, 47, 4);
+
+      noStroke();
+      fill("#d4efab");
+      textAlign(LEFT);
+      textSize(12);
+      text("PSU / " + pc.psu.capacity + " W", 163, 338);
+
+      // Case feet.
+      fill("#58707d");
+      rect(137, 390, 46, 9, 2);
+      rect(384, 390, 46, 9, 2);
+
+      // Diagram labels.
+      noStroke();
+      fill("#78909c");
+      textSize(9);
+      text("SYMBOLIC VIEW", 18, 27);
+      text("SHARED POWER SUPPLY", 18, 414);
+
+      textAlign(RIGHT);
+      text("NOT TO SCALE", 580, 414);
+    }
+
+    function drawCpuPackage(cpu, x, y, size) {
+      push();
+      translate(x, y);
+
+      const height = size;
+
+      // Socket retention frame.
+      stroke("#687780");
+      strokeWeight(2);
+      fill("#303b42");
+      rect(-7, -7, size + 14, height + 14, 4);
+
+      // Green substrate.
+      fill("#20493c");
+      stroke("#4c7a61");
+      strokeWeight(1);
+      rect(0, 0, size, height, 2);
+
+      // Silver heat spreader.
+      noStroke();
+      fill("#c8cdd0");
+      rect(5, 5, size - 10, height - 10, 4);
+
+      // AM5-style heat spreader cutouts.
+      fill("#20493c");
+
+      for (const position of [0.22, 0.66]) {
+        rect(size * position, 0, size * 0.12, 11, 1);
+        rect(size * position, height - 11, size * 0.12, 11, 1);
+        rect(0, height * position, 11, size * 0.12, 1);
+        rect(size - 11, height * position, 11, size * 0.12, 1);
+      }
+
+      // Metal highlights.
+      stroke("#f1f3f4");
+      line(10, 9, size - 10, 9);
+
+      stroke("#8d969c");
+      line(10, height - 8, size - 10, height - 8);
+
+      // Retention lever.
+      stroke("#9aa7ae");
+      strokeWeight(2);
+      line(size + 10, 4, size + 10, height - 5);
+      line(size + 10, height - 5, size + 16, height + 3);
+
+      // Orientation marker.
+      noStroke();
+      fill("#bda562");
+      triangle(2, height - 3, 8, height - 3, 2, height - 9);
+
+      // CPU markings.
+      fill("#3e474d");
+      textAlign(CENTER);
+      textFont("Arial");
+
+      textSize(11);
+      text("AMD", size / 2, height * 0.35);
+
+      textSize(8);
+      text("RYZEN", size / 2, height * 0.52);
+
+      textFont("monospace");
+      textSize(7);
+      text(cpu.short, size / 2, height * 0.70);
+
+      pop();
+    }
+  </script>
+</body>
+</html>
