@@ -264,6 +264,7 @@
           aria-label="Playback position"
           disabled
         >
+
         <output id="time">0:00</output>
       </div>
 
@@ -360,15 +361,17 @@
       trackingTimeout: 500
     };
 
-    const showStatus = text => {
+    function showStatus(text) {
       elements.status.textContent = text;
-    };
+    }
 
-    const distance = (a, b) => {
+    function distance(a, b) {
       return Math.hypot(a.x - b.x, a.y - b.y);
-    };
+    }
 
-    const clamp = value => Math.max(0, Math.min(1, value));
+    function clamp(value) {
+      return Math.max(0, Math.min(1, value));
+    }
 
     function formatTime(seconds) {
       if (!Number.isFinite(seconds)) return "0:00";
@@ -413,8 +416,10 @@
 
         this.tracks.forEach((track, index) => {
           const option = document.createElement("option");
+
           option.value = index;
           option.textContent = track.name;
+
           elements.playlist.append(option);
         });
 
@@ -496,8 +501,11 @@
 
         this.load(index);
 
-        if (wasPlaying) this.play();
-        else showStatus("Track selected");
+        if (wasPlaying) {
+          this.play();
+        } else {
+          showStatus("Track selected");
+        }
       },
 
       change(direction) {
@@ -626,14 +634,16 @@
         const pinching =
           distance(p[4], p[8]) / size < settings.pinchThreshold;
 
-        // Pinching takes priority over palm and swipe gestures.
         if (pinching) {
           this.holdStart = null;
           this.history = [];
           this.latched = false;
 
           if (!this.pinch) {
-            this.pinch = { y: p[8].y, volume };
+            this.pinch = {
+              y: p[8].y,
+              volume
+            };
           }
 
           return {
@@ -649,8 +659,10 @@
         this.pinch = null;
 
         const openPalm = [8, 12, 16, 20].every(tip => {
-          return distance(p[tip], p[0]) >
-            distance(p[tip - 2], p[0]) * 1.18;
+          return (
+            distance(p[tip], p[0]) >
+            distance(p[tip - 2], p[0]) * 1.18
+          );
         });
 
         if (!openPalm) {
@@ -658,7 +670,7 @@
           this.history = [];
           this.latched = false;
 
-          return { label: "Ready" };
+          return { label: "Ready · open your palm" };
         }
 
         if (now < this.cooldownUntil) {
@@ -668,7 +680,10 @@
           return { label: "Command detected" };
         }
 
-        this.history.push({ ...center, time: now });
+        this.history.push({
+          ...center,
+          time: now
+        });
 
         this.history = this.history.filter(point => {
           return now - point.time < settings.swipeWindow;
@@ -695,7 +710,6 @@
           };
         }
 
-        // A continuous palm hold should trigger only once.
         if (this.latched) {
           return {
             label: "Close or lower your hand to reset"
@@ -742,10 +756,49 @@
     };
 
     // -------------------------------------------------------
+    // Load HandPose using its model-ready callback
+    // -------------------------------------------------------
+
+    function loadHandModel() {
+      return new Promise((resolve, reject) => {
+        let instance;
+
+        const timeout = setTimeout(() => {
+          reject(new Error(
+            "Hand tracking took too long to load. " +
+            "Check your connection and try again."
+          ));
+        }, 60000);
+
+        try {
+          instance = ml5.handPose(
+            {
+              maxHands: 1,
+              flipped: false
+            },
+            (readyModel, error) => {
+              clearTimeout(timeout);
+
+              if (error) {
+                reject(error);
+                return;
+              }
+
+              resolve(readyModel || instance);
+            }
+          );
+        } catch (error) {
+          clearTimeout(timeout);
+          reject(error);
+        }
+      });
+    }
+
+    // -------------------------------------------------------
     // Camera and hand tracking
     // -------------------------------------------------------
 
-    const camera = {
+    const handCamera = {
       model: null,
       video: null,
       hands: [],
@@ -774,11 +827,9 @@
             );
           }
 
+          // Wait until the model-ready callback finishes.
           if (!this.model) {
-            this.model = await ml5.handPose({
-              maxHands: 1,
-              flipped: false
-            });
+            this.model = await loadHandModel();
           }
 
           elements.gesture.textContent = "Allow camera access";
@@ -812,6 +863,7 @@
           elements["camera-button"].textContent = "Stop camera";
           elements.gesture.textContent = "Show one hand";
         } catch (error) {
+          console.error("Hand tracking error:", error);
           this.stop();
 
           elements.gesture.textContent =
@@ -836,6 +888,7 @@
         });
 
         this.video?.remove();
+
         this.video = null;
         this.hands = [];
 
@@ -865,7 +918,6 @@
           return;
         }
 
-        // Mirror landmarks to match the displayed camera.
         const points = results[0].keypoints.map(point => ({
           x: settings.width - point.x,
           y: point.y
@@ -892,14 +944,16 @@
       }
     };
 
-    elements["camera-button"].onclick = () => camera.start();
+    elements["camera-button"].onclick = () => {
+      handCamera.start();
+    };
 
     elements["gesture-enabled"].onchange = () => {
       recognizer.reset();
 
       if (
         elements["gesture-enabled"].checked &&
-        (!camera.running || !player.tracks.length)
+        (!handCamera.running || !player.tracks.length)
       ) {
         elements["gesture-enabled"].checked = false;
         showStatus("Add music and start the camera first.");
@@ -931,7 +985,7 @@
     function draw() {
       background("#e8e8e2");
 
-      if (!camera.running || !camera.video) {
+      if (!handCamera.running || !handCamera.video) {
         noStroke();
         fill("#888");
         textSize(15);
@@ -942,20 +996,21 @@
       push();
       translate(width, 0);
       scale(-1, 1);
-      image(camera.video, 0, 0, width, height);
+      image(handCamera.video, 0, 0, width, height);
       pop();
 
       if (
-        performance.now() - camera.lastDetection >
+        performance.now() - handCamera.lastDetection >
         settings.trackingTimeout
       ) {
-        camera.hands = [];
+        handCamera.hands = [];
         recognizer.reset();
+
         elements.gesture.textContent = "Looking for your hand";
         elements["hold-progress"].value = 0;
       }
 
-      for (const hand of camera.hands) {
+      for (const hand of handCamera.hands) {
         const points = hand.keypoints;
 
         stroke(255);
@@ -992,7 +1047,7 @@
     });
 
     window.addEventListener("pagehide", () => {
-      camera.stop();
+      handCamera.stop();
       player.request++;
       player.audio.pause();
     });
