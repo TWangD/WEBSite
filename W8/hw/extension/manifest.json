@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Gesture Music Bridge",
+  "version": "0.1.0",
+  "description": "Connect an ml5.js gesture interface to YouTube Music.",
+  "host_permissions": [
+    "https://music.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost/*",
+        "http://127.0.0.1/*",
+        "https://music.youtube.com/*"
+      ],
+      "js": ["bridge.js"]
+    }
+  ]
+}
