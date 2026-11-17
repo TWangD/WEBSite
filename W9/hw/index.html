@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>Portrait in the Cyber Space</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    body {
+      display: block;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Full-screen presentation */
+
+    #stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      max-width: none;
+      max-height: none;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    #viewport {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    #world {
+      position: absolute;
+      inset: 0;
+    }
+
+    #world img,
+    #world canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #still {
+      object-fit: fill;
+    }
+
+    #life {
+      touch-action: manipulation;
+    }
+
+    #stage:focus-visible {
+      outline: 1px solid #bed2c9;
+      outline-offset: -1px;
+    }
+
+    /* Transparent glass chat windows */
+
+    .chat-window {
+      position: absolute;
+      z-index: 3;
+      width: 28%;
+      padding: 20px 22px 16px;
+
+      border: 1px solid rgba(38, 120, 121, 0.28);
+      border-radius: 18px;
+
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.23),
+        rgba(238, 255, 251, 0.07) 55%,
+        rgba(255, 255, 255, 0.16)
+      );
+
+      backdrop-filter: blur(2px) saturate(1.08);
+      -webkit-backdrop-filter: blur(2px) saturate(1.08);
+
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 1px 0 0 rgba(255, 255, 255, 0.45),
+        0 8px 24px rgba(25, 98, 99, 0.025);
+
+      color: #23585b;
+      text-shadow: 0 1px 3px rgba(255, 255, 255, 0.85);
+      cursor: default;
+    }
+
+    .chat-window::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      width: 18px;
+      height: 18px;
+
+      background: rgba(245, 255, 251, 0.16);
+      border-bottom: 1px solid rgba(38, 120, 121, 0.28);
+    }
+
+    .response-window {
+      left: 3.2%;
+      top: 22%;
+      min-height: 146px;
+    }
+
+    .response-window::after {
+      left: 22px;
+      transform: skewY(-35deg);
+      border-left: 1px solid rgba(38, 120, 121, 0.28);
+    }
+
+    .user-window {
+      right: 3.2%;
+      top: 61%;
+    }
+
+    .user-window::after {
+      right: 22px;
+      transform: skewY(35deg);
+      border-right: 1px solid rgba(38, 120, 121, 0.28);
+    }
+
+    .chat-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .chat-heading h2,
+    .chat-heading label {
+      margin: 0;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      font-weight: 600;
+      color: #3c7678;
+    }
+
+    .chat-status {
+      font-size: 10px;
+      color: #6b8180;
+      letter-spacing: 0.03em;
+    }
+
+    #portrait-response {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    #visitor-message {
+      display: block;
+      width: 100%;
+      min-height: 64px;
+      max-height: 160px;
+      padding: 0;
+
+      resize: none;
+      border: 0;
+      outline: none;
+
+      background: transparent;
+      color: #23585b;
+      font: 15px/1.55 Arial, sans-serif;
+    }
+
+    #visitor-message::placeholder {
+      color: #73918f;
+    }
+
+    .composer-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .composer-hint {
+      font-size: 10px;
+      color: #6b8180;
+    }
+
+    #send-message {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+
+      width: 34px;
+      height: 34px;
+
+      border: 1px solid #bfd7d2;
+      border-radius: 50%;
+
+      background: rgba(237, 245, 241, 0.35);
+      color: #246369;
+
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    #send-message:hover:not(:disabled) {
+      background: #deeee7;
+      transform: translateY(-1px);
+    }
+
+    #send-message:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    #send-message svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .chat-window:focus-within {
+      border-color: #5c9c98;
+    }
+
+    #send-message:focus-visible,
+    #portrait-response:focus-visible {
+      outline: 2px solid #5c9c98;
+      outline-offset: 4px;
+    }
+
+    /* Mobile layout */
+
+    @media (max-width: 700px) {
+      html {
+        overflow: auto;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+
+        overflow: visible;
+        height: auto;
+        min-height: 100svh;
+        padding: 210px 0 260px;
+      }
+
+      #stage {
+        width: 100vw;
+        height: 56.28vw;
+        overflow: visible;
+      }
+
+      .chat-window {
+        width: calc(100% - 40px);
+        padding: 18px 20px;
+      }
+
+      .response-window {
+        left: 20px;
+        top: auto;
+        bottom: calc(100% + 26px);
+        min-height: 135px;
+      }
+
+      .user-window {
+        right: 20px;
+        top: calc(100% + 28px);
+      }
+
+      #portrait-response {
+        max-height: 105px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #send-message {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main
+    id="stage"
+    tabindex="0"
+    aria-label="Animated abstract self-portrait. Move the pointer to guide a school of baitfish. Space pauses or resumes the animation."
+  >
+    <div id="viewport">
+      <div id="world">
+        <img
+          id="still"
+          src="./assets/portrait.png"
+          alt=""
+        >
+
+        <canvas id="art" aria-hidden="true"></canvas>
+        <canvas id="life" aria-hidden="true"></canvas>
+      </div>
+    </div>
+
+    <section
+      class="chat-window response-window"
+      aria-labelledby="response-label"
+    >
+      <div class="chat-heading">
+        <h2 id="response-label">MY RESPONSE</h2>
+        <span class="chat-status" id="chat-status">Demo</span>
+      </div>
+
+      <p
+        id="portrait-response"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        tabindex="0"
+      >What would you like to know about me?</p>
+    </section>
+
+    <form class="chat-window user-window" id="chat-form">
+      <div class="chat-heading">
+        <label for="visitor-message">YOU</label>
+      </div>
+
+      <textarea
+        id="visitor-message"
+        rows="2"
+        maxlength="1000"
+        placeholder="Leave a thought. Ask a question..."
+        aria-describedby="composer-hint"
+      ></textarea>
+
+      <div class="composer-footer">
+        <span class="composer-hint" id="composer-hint">
+          Enter to send · Shift + Enter for a new line
+        </span>
+
+        <button
+          id="send-message"
+          type="submit"
+          aria-label="Send message"
+          disabled
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M5 12h14M13 6l6 6-6 6"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    "use strict";
+
+    (() => {
+      const stage = document.getElementById("stage");
+      const world = document.getElementById("world");
+      const art = document.getElementById("art");
+      const life = document.getElementById("life");
+      const source = document.getElementById("still");
+      const ctx = life.getContext("2d");
+
+      const baitImage = new Image();
+      baitImage.src = "./assets/baitfish.png";
+
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+
+      const WIDTH = 1672;
+      const HEIGHT = 941;
+      const TAU = Math.PI * 2;
+
+      let paused = reduce.matches;
+      let time = 0;
+      let lastFrame = 0;
+      let ready = false;
+      let gl = null;
+      let program = null;
+      let uniforms = {};
+
+      const pointer = {
+        x: WIDTH / 2,
+        y: HEIGHT / 2,
+        on: false
+      };
+
+      const cursorSchool = {
+        x: 810,
+        y: 300,
+        vx: 35,
+        vy: 0,
+        heading: 0
+      };
+
+      const mantaZone = {
+        x: 1185,
+        y: 642,
+        rx: 190,
+        ry: 120
+      };
+
+      const clamp = (value, min, max) =>
+        Math.max(min, Math.min(max, value));
+
+      let seed = 413;
+
+      function random() {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        return seed / 4294967296;
+      }
+
+      /* Keep fish and orbit trails clear of the manta. */
+
+      function mantaDistance(x, y) {
+        return Math.hypot(
+          (x - mantaZone.x) / mantaZone.rx,
+          (y - mantaZone.y) / mantaZone.ry
+        );
+      }
+
+      function clearManta(point, margin = 1.28) {
+        const dx = (point.x - mantaZone.x) / mantaZone.rx;
+        const dy = (point.y - mantaZone.y) / mantaZone.ry;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance >= 2) return point;
+
+        const radius =
+          margin +
+          Math.log1p(Math.exp((distance - margin) * 12)) / 12;
+
+        const nx = distance > 0.001 ? dx / distance : 0;
+        const ny = distance > 0.001 ? dy / distance : -1;
+
+        return {
+          x: mantaZone.x + nx * radius * mantaZone.rx,
+          y: mantaZone.y + ny * radius * mantaZone.ry
+        };
+      }
+
+      /* Flowing orbit paths */
+
+      function orbitCurve(angle, now, group = 0) {
+        const phase = now * 0.27;
+        const flow = Math.sin(angle * 2 - phase);
+
+        const rx =
+          (group ? 410 : 635) +
+          19 * Math.sin(now * 0.21 + group) +
+          flow * 12;
+
+        const ry =
+          (group ? 190 : 132) +
+          15 * Math.sin(now * 0.25 + angle * 2 + group);
+
+        const rotation =
+          (group ? -0.22 : -0.43) +
+          0.025 * Math.sin(now * 0.17 + group);
+
+        const x =
+          Math.cos(angle) * rx +
+          17 * Math.sin(angle * 3 - now * 0.34);
+
+        const y =
+          Math.sin(angle) * ry +
+          13 * Math.sin(angle * 3 + now * 0.29 + group);
+
+        return clearManta({
+          x:
+            (group ? 915 : 765) +
+            x * Math.cos(rotation) -
+            y * Math.sin(rotation),
+
+          y:
+            (group ? 340 : 365) +
+            x * Math.sin(rotation) +
+            y * Math.cos(rotation)
+        });
+      }
+
+      function orbitPoint(age, group = 0) {
+        return orbitCurve(
+          age * (group ? 0.16 : 0.13) + group * 2.4,
+          age,
+          group
+        );
+      }
+
+      /* Three schools, each containing 32 fish. */
+
+      const school = Array.from({ length: 96 }, (_, index) => {
+        const group = index < 64 ? index % 2 : 2;
+        const offset = (random() - 0.5) * 3.1;
+
+        const point =
+          group === 2
+            ? cursorSchool
+            : orbitPoint(offset, group);
+
+        return {
+          x: point.x + (random() - 0.5) * 40,
+          y: point.y + (random() - 0.5) * 32,
+          vx: 30,
+          vy: 0,
+          size: 14 + random() * 12,
+          phase: random() * TAU,
+          group,
+          offset
+        };
+      });
+
+      const wakes = Array.from({ length: 6 }, () => ({
+        x: 1050,
+        y: 650,
+        vx: 0,
+        vy: 0
+      }));
+
+      const wakeArray = new Float32Array(24);
+
+      /* WebGL artwork animation */
+
+      const vertexShader = `
+        attribute vec2 position;
+        varying vec2 uv;
+
+        void main() {
+          uv = vec2(
+            position.x * .5 + .5,
+            .5 - position.y * .5
+          );
+
+          gl_Position = vec4(position, 0., 1.);
+        }
+      `;
+
+      const fragmentShader = `
+        precision highp float;
+
+        varying vec2 uv;
+
+        uniform sampler2D image;
+        uniform sampler2D lensImage;
+        uniform float time;
+        uniform vec4 wakes[6];
+
+        void main() {
+          vec2 p = uv;
+
+          float edge =
+            smoothstep(0., .055, p.x) *
+            smoothstep(0., .055, 1. - p.x);
+
+          float lowerBoundary =
+            .82 - .30 * smoothstep(.65, .98, p.x);
+
+          float kelp =
+            smoothstep(.66, .79, p.x) *
+            smoothstep(
+              lowerBoundary,
+              lowerBoundary + .07,
+              p.y
+            ) *
+            (1. - smoothstep(.86, .92, p.y));
+
+          float water =
+            smoothstep(.87, .92, p.y) *
+            (1. - smoothstep(.965, 1., p.y));
+
+          vec2 mantaDelta =
+            (
+              uv * vec2(1672., 941.) -
+              vec2(1185., 642.)
+            ) / vec2(190., 120.);
+
+          kelp *= smoothstep(
+            1.10,
+            1.5,
+            length(mantaDelta)
+          );
+
+          p.x += edge * kelp * .004 *
+            sin(time * .55 + p.y * 17.);
+
+          p.y += edge * kelp * .002 *
+            sin(time * .42 + p.x * 18.);
+
+          for (int i = 0; i < 6; i++) {
+            vec2 delta = uv - wakes[i].xy;
+            float distance =
+              length(delta * vec2(1., .563));
+
+            float wave =
+              exp(-distance * distance / .012);
+
+            float strength = length(wakes[i].zw);
+            vec2 push = wakes[i].zw * .000095;
+
+            float oscillation = sin(
+              distance * 48. -
+              time * 1.7 +
+              float(i)
+            );
+
+            p += edge * kelp * wave * (
+              push +
+              vec2(
+                oscillation,
+                -oscillation * .35
+              ) * min(.006, strength * .00007)
+            );
+          }
+
+          p.x += water * .0024 *
+            sin(p.y * 160. - time * .9);
+
+          p.y += water * .0015 *
+            sin(p.x * 37. - time * .7);
+
+          vec4 color = texture2D(
+            image,
+            clamp(p, vec2(.001), vec2(.999))
+          );
+
+          /* Lens layers behind the rigid glass structure. */
+
+          vec2 worldPosition = uv * vec2(1672., 941.);
+
+          vec2 center = vec2(
+            1040. + 4. * sin(time * .16),
+            385. + 3. * sin(time * .21)
+          );
+
+          vec2 local = worldPosition - center;
+
+          float breathing =
+            1. + .035 * sin(time * .29);
+
+          float angle = .12 * sin(time * .14);
+
+          mat2 turn = mat2(
+            cos(angle), -sin(angle),
+            sin(angle), cos(angle)
+          );
+
+          vec2 coreUV = (
+            local -
+            vec2(
+              3. * sin(time * .24),
+              2. * cos(time * .18)
+            )
+          ) / (560. * breathing) + .5;
+
+          vec2 outerUV = turn * local / 560. + .5;
+          vec2 axesUV = local / 560. + .5;
+
+          if (
+            abs(local.x) < 275. &&
+            abs(local.y) < 275.
+          ) {
+            float clarity =
+              .5 + .5 * sin(time * .42);
+
+            vec2 softness = vec2(
+              (.25 + clarity * 1.9) / 1024.,
+              0.
+            );
+
+            float sharp =
+              texture2D(lensImage, coreUV).r;
+
+            float soft = (
+              texture2D(
+                lensImage,
+                coreUV + softness
+              ).r +
+              texture2D(
+                lensImage,
+                coreUV - softness
+              ).r +
+              texture2D(
+                lensImage,
+                coreUV + softness.yx
+              ).r +
+              texture2D(
+                lensImage,
+                coreUV - softness.yx
+              ).r
+            ) * .25;
+
+            float core =
+              mix(sharp, soft, clarity * .70);
+
+            float outer =
+              texture2D(lensImage, outerUV).g;
+
+            float axes =
+              texture2D(lensImage, axesUV).b;
+
+            float alpha =
+              1. -
+              (1. - core) *
+              (1. - outer * .90) *
+              (1. - axes * .78);
+
+            float openness = smoothstep(
+              .83,
+              .98,
+              min(color.r, min(color.g, color.b))
+            );
+
+            color.rgb = mix(
+              color.rgb,
+              vec3(.25, .55, .54),
+              alpha * openness * .82
+            );
+          }
+
+          gl_FragColor = color;
+        }
+      `;
+
+      function compileShader(type, code) {
+        const shader = gl.createShader(type);
+
+        gl.shaderSource(shader, code);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          throw new Error(gl.getShaderInfoLog(shader));
+        }
+
+        return shader;
+      }
+
+      function configureTexture() {
+        gl.bindTexture(
+          gl.TEXTURE_2D,
+          gl.createTexture()
+        );
+
+        gl.texParameteri(
+          gl.TEXTURE_2D,
+          gl.TEXTURE_WRAP_S,
+          gl.CLAMP_TO_EDGE
+        );
+
+        gl.texParameteri(
+          gl.TEXTURE_2D,
+          gl.TEXTURE_WRAP_T,
+          gl.CLAMP_TO_EDGE
+        );
+
+        gl.texParameteri(
+          gl.TEXTURE_2D,
+          gl.TEXTURE_MIN_FILTER,
+          gl.LINEAR
+        );
+
+        gl.texParameteri(
+          gl.TEXTURE_2D,
+          gl.TEXTURE_MAG_FILTER,
+          gl.LINEAR
+        );
+      }
+
+      function init() {
+        try {
+          gl = art.getContext("webgl", {
+            alpha: false,
+            antialias: false,
+            preserveDrawingBuffer: true,
+            powerPreference: "low-power"
+          });
+
+          if (!gl) {
+            art.style.display = "none";
+            ready = true;
+            resize();
+            return;
+          }
+
+          program = gl.createProgram();
+
+          gl.attachShader(
+            program,
+            compileShader(
+              gl.VERTEX_SHADER,
+              vertexShader
+            )
+          );
+
+          gl.attachShader(
+            program,
+            compileShader(
+              gl.FRAGMENT_SHADER,
+              fragmentShader
+            )
+          );
+
+          gl.linkProgram(program);
+
+          if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            throw new Error(gl.getProgramInfoLog(program));
+          }
+
+          gl.useProgram(program);
+
+          gl.bindBuffer(
+            gl.ARRAY_BUFFER,
+            gl.createBuffer()
+          );
+
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([
+              -1, -1,
+               1, -1,
+              -1,  1,
+              -1,  1,
+               1, -1,
+               1,  1
+            ]),
+            gl.STATIC_DRAW
+          );
+
+          const position = gl.getAttribLocation(
+            program,
+            "position"
+          );
+
+          gl.enableVertexAttribArray(position);
+
+          gl.vertexAttribPointer(
+            position,
+            2,
+            gl.FLOAT,
+            false,
+            0,
+            0
+          );
+
+          gl.activeTexture(gl.TEXTURE0);
+          configureTexture();
+
+          gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            source
+          );
+
+          gl.activeTexture(gl.TEXTURE1);
+          configureTexture();
+
+          gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            makeLensTexture()
+          );
+
+          gl.generateMipmap(gl.TEXTURE_2D);
+
+          gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_MIN_FILTER,
+            gl.LINEAR_MIPMAP_LINEAR
+          );
+
+          gl.uniform1i(
+            gl.getUniformLocation(program, "lensImage"),
+            1
+          );
+
+          gl.activeTexture(gl.TEXTURE0);
+
+          uniforms.time = gl.getUniformLocation(
+            program,
+            "time"
+          );
+
+          uniforms.wakes = gl.getUniformLocation(
+            program,
+            "wakes[0]"
+          );
+
+          gl.uniform1i(
+            gl.getUniformLocation(program, "image"),
+            0
+          );
+
+          ready = true;
+          resize();
+        } catch (error) {
+          console.error(error);
+
+          gl = null;
+          program = null;
+          art.style.display = "none";
+
+          ready = true;
+          resize();
+        }
+      }
+
+      /* Cover the screen without stretching the composition. */
+
+      function resize() {
+        const rect = stage.getBoundingClientRect();
+        const dpr = Math.min(devicePixelRatio || 1, 2);
+
+        const scale = Math.max(
+          rect.width / WIDTH,
+          rect.height / HEIGHT
+        );
+
+        const width = WIDTH * scale;
+        const height = HEIGHT * scale;
+
+        world.style.inset = "auto";
+        world.style.width = width + "px";
+        world.style.height = height + "px";
+        world.style.left = (rect.width - width) / 2 + "px";
+        world.style.top = (rect.height - height) / 2 + "px";
+
+        for (const canvas of [art, life]) {
+          canvas.width = Math.max(
+            1,
+            Math.round(width * dpr)
+          );
+
+          canvas.height = Math.max(
+            1,
+            Math.round(height * dpr)
+          );
+        }
+
+        if (gl) {
+          gl.viewport(0, 0, art.width, art.height);
+        }
+
+        draw();
+      }
+
+      /* Smooth fish steering */
+
+      function steer(fish, dx, dy, dt) {
+        const desiredAngle = Math.atan2(dy, dx);
+
+        const angleError = Math.atan2(
+          Math.sin(desiredAngle - fish.heading),
+          Math.cos(desiredAngle - fish.heading)
+        );
+
+        const targetTurn = clamp(
+          angleError * 3.6,
+          -1.85,
+          1.85
+        );
+
+        fish.turn +=
+          (targetTurn - fish.turn) *
+          (1 - Math.exp(-dt * 4.2));
+
+        fish.heading += fish.turn * dt;
+
+        const maxSpeed =
+          fish.group === 2 ? 240 : 145;
+
+        const wantedSpeed =
+          clamp(Math.hypot(dx, dy), 22, maxSpeed) *
+          (1 - 0.16 * Math.min(1, Math.abs(angleError)));
+
+        fish.speed +=
+          (wantedSpeed - fish.speed) *
+          (1 - Math.exp(-dt * 1.45));
+
+        fish.vx = Math.cos(fish.heading) * fish.speed;
+        fish.vy = Math.sin(fish.heading) * fish.speed;
+
+        fish.x += fish.vx * dt;
+        fish.y += fish.vy * dt;
+
+        fish.beat += dt * (
+          5.5 + fish.speed * 0.041
+        );
+      }
+
+      for (const fish of school) {
+        const point = orbitPoint(
+          fish.offset,
+          fish.group
+        );
+
+        const ahead = orbitPoint(
+          fish.offset + 0.1,
+          fish.group
+        );
+
+        fish.heading = Math.atan2(
+          ahead.y - point.y,
+          ahead.x - point.x
+        );
+
+        fish.speed = 45;
+        fish.turn = 0;
+        fish.beat = fish.phase;
+      }
+
+      function advance(dt) {
+        /* Cursor-following school leader */
+
+        const idle = orbitPoint(time + 9, 1);
+
+        const goal = clearManta(
+          pointer.on
+            ? {
+                x: clamp(pointer.x, 100, 1570),
+                y: clamp(pointer.y, 75, 830)
+              }
+            : idle,
+          1.45
+        );
+
+        const response = 1 - Math.exp(-dt * 2);
+
+        let gx = (goal.x - cursorSchool.x) * 1.35;
+        let gy = (goal.y - cursorSchool.y) * 1.35;
+
+        const speed = Math.hypot(gx, gy);
+        const limit = 210;
+
+        if (speed > limit) {
+          gx *= limit / speed;
+          gy *= limit / speed;
+        }
+
+        cursorSchool.vx +=
+          (gx - cursorSchool.vx) * response;
+
+        cursorSchool.vy +=
+          (gy - cursorSchool.vy) * response;
+
+        cursorSchool.x += cursorSchool.vx * dt;
+        cursorSchool.y += cursorSchool.vy * dt;
+
+        if (
+          Math.hypot(
+            cursorSchool.vx,
+            cursorSchool.vy
+          ) > 8
+        ) {
+          const angle =
+            Math.atan2(
+              cursorSchool.vy,
+              cursorSchool.vx
+            ) - cursorSchool.heading;
+
+          cursorSchool.heading +=
+            Math.atan2(
+              Math.sin(angle),
+              Math.cos(angle)
+            ) * (1 - Math.exp(-dt * 1.6));
+        }
+
+        const before = school.map(fish => ({
+          ...fish
+        }));
+
+        const centers = Array.from(
+          { length: 3 },
+          () => ({
+            x: 0,
+            y: 0,
+            vx: 0,
+            vy: 0,
+            n: 0
+          })
+        );
+
+        for (const fish of before) {
+          const center = centers[fish.group];
+
+          center.x += fish.x;
+          center.y += fish.y;
+          center.vx += fish.vx;
+          center.vy += fish.vy;
+          center.n++;
+        }
+
+        for (const center of centers) {
+          center.x /= center.n;
+          center.y /= center.n;
+          center.vx /= center.n;
+          center.vy /= center.n;
+        }
+
+        for (let i = 0; i < school.length; i++) {
+          const fish = school[i];
+
+          const target = orbitPoint(
+            time + fish.offset,
+            fish.group
+          );
+
+          const ahead = orbitPoint(
+            time + fish.offset + 0.18,
+            fish.group
+          );
+
+          let dx =
+            (ahead.x - target.x) / 0.18 +
+            (target.x - fish.x) * 0.62;
+
+          let dy =
+            (ahead.y - target.y) / 0.18 +
+            (target.y - fish.y) * 0.62;
+
+          if (fish.group === 2) {
+            const angle =
+              fish.phase + time * 0.38;
+
+            const spread =
+              34 + Math.abs(fish.offset) * 28;
+
+            const sx = Math.cos(angle) * spread;
+            const sy = Math.sin(angle) * spread * 0.55;
+            const heading = cursorSchool.heading;
+
+            const tx =
+              cursorSchool.x +
+              sx * Math.cos(heading) -
+              sy * Math.sin(heading);
+
+            const ty =
+              cursorSchool.y +
+              sx * Math.sin(heading) +
+              sy * Math.cos(heading);
+
+            dx =
+              (tx - fish.x) * 1.75 +
+              cursorSchool.vx;
+
+            dy =
+              (ty - fish.y) * 1.75 +
+              cursorSchool.vy;
+          }
+
+          let vx = 0;
+          let vy = 0;
+          let neighbors = 0;
+
+          /* Alignment and separation */
+
+          for (let j = 0; j < before.length; j++) {
+            if (i === j) continue;
+
+            const other = before[j];
+            const sx = fish.x - other.x;
+            const sy = fish.y - other.y;
+            const distance = Math.hypot(sx, sy);
+
+            if (
+              distance < 85 &&
+              other.group === fish.group
+            ) {
+              vx += other.vx;
+              vy += other.vy;
+              neighbors++;
+            }
+
+            if (
+              distance < 24 &&
+              distance > 0.1
+            ) {
+              dx +=
+                sx / distance *
+                (24 - distance) * 1.05;
+
+              dy +=
+                sy / distance *
+                (24 - distance) * 1.05;
+            }
+          }
+
+          if (neighbors) {
+            dx =
+              dx * 0.84 +
+              vx / neighbors * 0.16;
+
+            dy =
+              dy * 0.84 +
+              vy / neighbors * 0.16;
+          }
+
+          /* Individual movement variations */
+
+          dx += Math.cos(
+            time * 0.65 + fish.phase
+          ) * 7;
+
+          dy += Math.sin(
+            time * 0.58 + fish.phase
+          ) * 9;
+
+          /* Soft boundary avoidance */
+
+          dx +=
+            Math.max(0, 80 - fish.x) * 1.3 -
+            Math.max(0, fish.x - 1580) * 1.3;
+
+          dy +=
+            Math.max(0, 55 - fish.y) * 1.3 -
+            Math.max(0, fish.y - 845) * 1.3;
+
+          /* Avoid the manta */
+
+          const mx =
+            (fish.x - mantaZone.x) /
+            mantaZone.rx;
+
+          const my =
+            (fish.y - mantaZone.y) /
+            mantaZone.ry;
+
+          const md = Math.hypot(mx, my);
+
+          if (md < 1.8 && md > 0.01) {
+            const push = (1.8 - md) * 95;
+
+            dx += mx / md * push;
+            dy += my / md * push;
+          }
+
+          steer(fish, dx, dy, dt);
+
+          if (
+            mantaDistance(fish.x, fish.y) < 1.18
+          ) {
+            const clear = clearManta(fish, 1.2);
+
+            fish.x = clear.x;
+            fish.y = clear.y;
+          }
+        }
+
+        /* Fish wakes influence the exposed kelp */
+
+        const movers = [
+          centers[0],
+          centers[1],
+          centers[2],
+          school[19],
+          school[51],
+          school[80]
+        ];
+
+        movers.forEach((mover, index) => {
+          const wake = wakes[index];
+          const ease = 1 - Math.exp(-dt * 1.8);
+
+          wake.x += (mover.x - wake.x) * ease;
+          wake.y += (mover.y - wake.y) * ease;
+
+          wake.vx += (mover.vx - wake.vx) * ease;
+          wake.vy += (mover.vy - wake.vy) * ease;
+        });
+      }
+
+      /* Flexible fish bodies */
+
+      function spine(fish, u) {
+        const tail = 1 - u;
+        const amplitude = fish.size * 0.075;
+
+        return (
+          amplitude * tail * tail *
+          Math.sin(fish.beat - tail * 5.2) +
+          fish.turn * fish.size * 0.11 *
+          tail * tail
+        );
+      }
+
+      function drawFish(fish) {
+        if (!baitImage.naturalWidth) return;
+
+        ctx.save();
+        ctx.translate(fish.x, fish.y);
+        ctx.rotate(fish.heading);
+        ctx.globalAlpha = 0.73;
+
+        const sw = baitImage.naturalWidth;
+        const sh = baitImage.naturalHeight;
+        const height = fish.size * sh / sw;
+        const slices = 12;
+
+        for (let i = 0; i < slices; i++) {
+          const u = (i + 0.5) / slices;
+          const dy = spine(fish, u);
+
+          const slope = (
+            spine(fish, u + 0.01) -
+            spine(fish, u - 0.01)
+          ) / (0.02 * fish.size);
+
+          ctx.save();
+
+          ctx.translate(
+            (u - 0.5) * fish.size,
+            dy
+          );
+
+          ctx.rotate(Math.atan(slope));
+
+          ctx.drawImage(
+            baitImage,
+            i * sw / slices,
+            0,
+            sw / slices,
+            sh,
+            -fish.size / slices / 2,
+            -height / 2,
+            fish.size / slices + 0.24,
+            height
+          );
+
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+
+      /*
+        Lens texture channels:
+        red = dense core
+        green = outer elliptical rings
+        blue = construction lines
+      */
+
+      function makeLensTexture() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1024;
+        canvas.height = 1024;
+
+        const x = canvas.getContext("2d");
+
+        x.fillStyle = "#000";
+        x.fillRect(0, 0, 1024, 1024);
+
+        x.scale(1024 / 560, 1024 / 560);
+        x.translate(280, 280);
+        x.globalCompositeOperation = "lighter";
+
+        const field = x.createRadialGradient(
+          -8, 5, 4,
+          0, 0, 148
+        );
+
+        field.addColorStop(
+          0,
+          "rgba(255,0,0,.22)"
+        );
+
+        field.addColorStop(
+          0.52,
+          "rgba(255,0,0,.18)"
+        );
+
+        field.addColorStop(
+          1,
+          "rgba(255,0,0,0)"
+        );
+
+        x.fillStyle = field;
+        x.beginPath();
+        x.arc(0, 0, 148, 0, TAU);
+        x.fill();
+
+        for (let i = 0; i < 58; i++) {
+          const u = i / 57;
+          const radius =
+            5 + 145 * Math.pow(u, 1.55);
+
+          x.strokeStyle =
+            `rgba(255,0,0,${0.23 + u * 0.13})`;
+
+          x.lineWidth = 0.45 + u * 0.16;
+
+          x.beginPath();
+
+          x.ellipse(
+            -2 + u * 3,
+            2 - u * 2,
+            radius,
+            radius * (0.976 + u * 0.02),
+            0,
+            0,
+            TAU
+          );
+
+          x.stroke();
+        }
+
+        const rings = [
+          [0, 0, 155, 149, 0.02, 0.43],
+          [-7, -6, 164, 162, -0.10, 0.37],
+          [9, -9, 176, 166, 0.18, 0.35],
+          [-14, -13, 185, 176, -0.19, 0.40],
+          [13, 8, 201, 168, 0.43, 0.32],
+          [-18, -12, 211, 190, 0.29, 0.36],
+          [7, -13, 229, 181, -0.49, 0.38],
+          [-10, -20, 237, 213, 0.30, 0.30],
+          [22, 6, 246, 170, -0.61, 0.32]
+        ];
+
+        for (
+          const [cx, cy, rx, ry, angle, alpha]
+          of rings
+        ) {
+          x.strokeStyle = `rgba(0,255,0,${alpha})`;
+          x.lineWidth = 0.7;
+
+          x.beginPath();
+          x.ellipse(cx, cy, rx, ry, angle, 0, TAU);
+          x.stroke();
+        }
+
+        x.strokeStyle = "rgba(0,0,255,.43)";
+        x.lineWidth = 0.65;
+
+        x.beginPath();
+        x.moveTo(-263, 0);
+        x.lineTo(263, 0);
+        x.moveTo(-7, -262);
+        x.lineTo(-7, 262);
+        x.stroke();
+
+        x.strokeStyle = "rgba(0,0,255,.23)";
+        x.lineWidth = 0.45;
+
+        x.beginPath();
+        x.moveTo(-236, -19);
+        x.lineTo(232, -19);
+        x.moveTo(15, -231);
+        x.lineTo(15, 240);
+        x.stroke();
+
+        return canvas;
+      }
+
+      function clipManta() {
+        ctx.beginPath();
+        ctx.rect(-200, -200, 2100, 1400);
+
+        ctx.ellipse(
+          mantaZone.x,
+          mantaZone.y,
+          mantaZone.rx * 1.1,
+          mantaZone.ry * 1.1,
+          0,
+          0,
+          TAU
+        );
+
+        ctx.clip("evenodd");
+      }
+
+      /* Orbital lines, trails, and moving points */
+
+      function drawOrbits() {
+        ctx.save();
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        clipManta();
+
+        for (let group = 0; group < 2; group++) {
+          ctx.beginPath();
+
+          for (let i = 0; i <= 210; i++) {
+            const point = orbitCurve(
+              i / 210 * TAU,
+              time,
+              group
+            );
+
+            if (i === 0) {
+              ctx.moveTo(point.x, point.y);
+            } else {
+              ctx.lineTo(point.x, point.y);
+            }
+          }
+
+          ctx.strokeStyle = group
+            ? "rgba(70,145,144,.23)"
+            : "rgba(188,192,10,.47)";
+
+          ctx.lineWidth = group ? 0.65 : 0.9;
+          ctx.stroke();
+
+          /* Fading trail */
+
+          for (let i = 1; i < 100; i++) {
+            const age = (100 - i) * 0.1;
+
+            const a = orbitPoint(
+              time - age,
+              group
+            );
+
+            const b = orbitPoint(
+              time - age + 0.1,
+              group
+            );
+
+            const u = i / 100;
+
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+
+            ctx.strokeStyle = group
+              ? `rgba(48,140,143,${0.3 * u * u})`
+              : `rgba(197,198,0,${0.82 * u * u})`;
+
+            ctx.lineWidth = group
+              ? 0.6 + u
+              : 0.5 + 2 * u * u;
+
+            ctx.stroke();
+          }
+
+          /* Companion line separates and rejoins */
+
+          ctx.beginPath();
+
+          for (let i = 0; i <= 100; i++) {
+            const point = orbitCurve(
+              i / 100 * TAU,
+              time - 1.2,
+              group
+            );
+
+            if (i === 0) {
+              ctx.moveTo(point.x, point.y);
+            } else {
+              ctx.lineTo(point.x, point.y);
+            }
+          }
+
+          ctx.strokeStyle = group
+            ? "rgba(110,169,160,.09)"
+            : "rgba(191,194,21,.15)";
+
+          ctx.lineWidth = 0.45;
+          ctx.stroke();
+
+          const head = orbitPoint(time, group);
+
+          ctx.beginPath();
+
+          ctx.arc(
+            head.x,
+            head.y,
+            group ? 2.4 : 3.8,
+            0,
+            TAU
+          );
+
+          ctx.fillStyle = group
+            ? "rgba(62,143,140,.62)"
+            : "rgba(194,194,13,.9)";
+
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      function ripple(x, y, radius, alpha) {
+        ctx.beginPath();
+
+        ctx.ellipse(
+          x,
+          y,
+          Math.max(0.1, radius),
+          Math.max(0.1, radius * 0.12),
+          0,
+          0,
+          TAU
+        );
+
+        ctx.strokeStyle =
+          `rgba(56,140,137,${alpha})`;
+
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+
+      /* Render the complete scene */
+
+      function draw() {
+        if (!ready) return;
+
+        wakes.forEach((wake, index) => {
+          wakeArray[index * 4] = wake.x / WIDTH;
+          wakeArray[index * 4 + 1] = wake.y / HEIGHT;
+          wakeArray[index * 4 + 2] = wake.vx;
+          wakeArray[index * 4 + 3] = wake.vy;
+        });
+
+        if (gl && program) {
+          gl.useProgram(program);
+
+          gl.uniform1f(
+            uniforms.time,
+            time
+          );
+
+          gl.uniform4fv(
+            uniforms.wakes,
+            wakeArray
+          );
+
+          gl.drawArrays(
+            gl.TRIANGLES,
+            0,
+            6
+          );
+        }
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, life.width, life.height);
+
+        ctx.scale(
+          life.width / WIDTH,
+          life.height / HEIGHT
+        );
+
+        drawOrbits();
+
+        ctx.save();
+        clipManta();
+        school.forEach(drawFish);
+        ctx.restore();
+
+        for (let i = 0; i < 4; i++) {
+          const phase =
+            (time * 0.027 + i * 0.25) % 1;
+
+          ripple(
+            892,
+            857,
+            110 + phase * 680,
+            Math.sin(phase * Math.PI) * 0.07
+          );
+        }
+      }
+
+      function frame(now) {
+        const dt = lastFrame
+          ? Math.min((now - lastFrame) / 1000, 0.045)
+          : 0;
+
+        lastFrame = now;
+
+        if (!document.hidden && ready && !paused) {
+          time += dt;
+          advance(dt);
+          draw();
+        }
+
+        requestAnimationFrame(frame);
+      }
+
+      /* Map the cursor to the cropped artwork correctly. */
+
+      function move(event) {
+        const rect = world.getBoundingClientRect();
+
+        pointer.x = clamp(
+          (event.clientX - rect.left) /
+          rect.width * WIDTH,
+          0,
+          WIDTH
+        );
+
+        pointer.y = clamp(
+          (event.clientY - rect.top) /
+          rect.height * HEIGHT,
+          0,
+          HEIGHT
+        );
+
+        pointer.on = true;
+      }
+
+      stage.addEventListener("pointermove", move);
+      stage.addEventListener("pointerdown", move);
+
+      stage.addEventListener("pointerleave", () => {
+        pointer.on = false;
+      });
+
+      document.addEventListener("keydown", event => {
+        if (
+          event.target.closest(
+            'textarea,input,button,[contenteditable="true"]'
+          )
+        ) {
+          return;
+        }
+
+        if (event.code === "Space") {
+          event.preventDefault();
+          paused = !paused;
+          draw();
+        }
+      });
+
+      reduce.addEventListener("change", event => {
+        paused = event.matches;
+        draw();
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        lastFrame = 0;
+      });
+
+      art.addEventListener("webglcontextlost", event => {
+        event.preventDefault();
+
+        art.style.display = "none";
+        gl = null;
+        program = null;
+      });
+
+      art.addEventListener("webglcontextrestored", () => {
+        art.style.display = "block";
+        init();
+      });
+
+      new ResizeObserver(resize).observe(stage);
+
+      baitImage.onload = draw;
+
+      if (source.complete && source.naturalWidth) {
+        init();
+      } else {
+        source.onload = init;
+      }
+
+      requestAnimationFrame(frame);
+    })();
+
+    /*
+      Chat interface demo.
+      Messages are not sent to a server or saved.
+      Replace the demo response when connecting the chatbot.
+    */
+
+    (() => {
+      const form = document.getElementById("chat-form");
+      const input = document.getElementById("visitor-message");
+      const response = document.getElementById("portrait-response");
+      const status = document.getElementById("chat-status");
+      const send = document.getElementById("send-message");
+
+      let busy = false;
+
+      function sync() {
+        send.disabled = busy || !input.value.trim();
+      }
+
+      input.addEventListener("input", sync);
+
+      input.addEventListener("keydown", event => {
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey &&
+          !event.isComposing
+        ) {
+          event.preventDefault();
+
+          if (!send.disabled) {
+            form.requestSubmit();
+          }
+        }
+      });
+
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+
+        const message = input.value.trim();
+
+        if (!message || busy) return;
+
+        busy = true;
+        sync();
+
+        response.setAttribute("aria-busy", "true");
+        status.textContent = "Receiving...";
+
+        await new Promise(resolve => {
+          setTimeout(resolve, 500);
+        });
+
+        response.textContent =
+          "Your message came through. Once the chatbot is " +
+          "connected, my response will appear here.";
+
+        response.removeAttribute("aria-busy");
+        status.textContent = "Demo · not connected";
+
+        busy = false;
+        sync();
+      });
+    })();
+  </script>
+</body>
+</html>
