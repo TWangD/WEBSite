@@ -631,8 +631,7 @@
           y: (p[0].y + p[9].y) / 2
         };
 
-        const pinching =
-          distance(p[4], p[8]) / size < settings.pinchThreshold;
+        const pinching = (distance(p[4], p[8]) / size) < settings.pinchThreshold;
 
         if (pinching) {
           this.holdStart = null;
@@ -661,7 +660,7 @@
         const openPalm = [8, 12, 16, 20].every(tip => {
           return (
             distance(p[tip], p[0]) >
-            distance(p[tip - 2], p[0]) * 1.18
+            distance(p[tip - 2], p[0]) * 1.5
           );
         });
 
