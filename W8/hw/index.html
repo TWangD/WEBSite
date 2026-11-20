@@ -10,61 +10,145 @@
 
   <style>
     :root {
-      --background: #f6f6f3;
-      --text: #222;
-      --muted: #666;
-      --border: #d9d9d3;
-      --preview: #e8e8e2;
+      color-scheme: dark;
+      --background: #1d1531;
+      --panel: rgba(29, 21, 49, 0.9);
+      --text: #fff5e9;
+      --muted: #ddd0f0;
+      --border: #78628f;
+      --accent: #ffcc7b;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      padding: 40px 20px;
       background: var(--background);
       color: var(--text);
-      font: 14px/1.6 Arial, sans-serif;
+      font: 15px/1.55 Arial, sans-serif;
     }
+
+    /* The animation fills the window and stays behind the page. */
+    #visualizer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    #visualizer canvas { display: block; }
 
     main {
-      max-width: 680px;
-      margin: auto;
+      position: relative;
+      z-index: 1;
     }
 
-    header, .row {
+    .music-deck {
+      min-height: 100vh;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 28px 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+
+    #player-card {
+      position: relative;
+      width: min(100%, 420px);
+    }
+
+    h1, h2, p { margin: 0; }
+    h1 { font-size: 19px; font-weight: 600; }
+    h2 { font-size: 22px; overflow-wrap: anywhere; }
+
+    .row {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 10px;
+      margin-top: 13px;
     }
 
-    header {
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    h1, h2 { font-weight: 400; }
-    h1 { margin: 0; font-size: 20px; }
-    h2 { margin: 8px 0; font-size: 24px; overflow-wrap: anywhere; }
+    .spread { justify-content: space-between; flex-wrap: wrap; }
+    .transport { justify-content: center; flex-wrap: wrap; }
+    .muted, output, #status, #gesture { color: var(--muted); font-size: 13px; }
+    #song-title { margin-top: 3px; }
+    #status { min-height: 20px; }
+    #gesture { margin: 10px 0 6px; }
 
     button, select {
-      padding: 10px 14px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: transparent;
-      color: inherit;
+      padding: 8px 12px;
+      border: 1px solid #9279ad;
+      border-radius: 8px;
+      background: #35284b;
+      color: var(--text);
       font: inherit;
     }
 
     button, summary { cursor: pointer; }
-    button:hover { background: var(--preview); }
-    button:disabled { opacity: .4; cursor: default; }
+    button:hover { background: #503b6e; }
+    button:disabled { opacity: 0.55; cursor: wait; }
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    #play {
+      min-width: 82px;
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #251834;
+      font-weight: 700;
+    }
+
+    select { width: 100%; margin-top: 12px; }
+    input, progress { accent-color: var(--accent); }
+    input[type="range"] { flex: 1; min-width: 0; }
+    progress { display: block; width: 100%; height: 5px; }
+    output { min-width: 40px; text-align: right; }
+    a { color: var(--accent); }
+
+    .feedback {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      z-index: 1;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #251834;
+      font-weight: 700;
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    #player-feedback {
+      top: 0;
+      right: 14px;
+      bottom: auto;
+      transform: translateY(-50%);
+    }
+
+    .more {
+      width: min(680px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 48px;
+    }
+
+    .more .panel + .panel { margin-top: 16px; }
 
     #camera-view {
       position: relative;
       overflow: hidden;
+      margin-top: 12px;
       border-radius: 8px;
-      background: var(--preview);
+      background: #211832;
     }
 
     #camera-view canvas {
@@ -73,210 +157,343 @@
       height: auto !important;
     }
 
-    #command-feedback {
-      position: absolute;
-      right: 12px;
-      bottom: 12px;
-      z-index: 1;
-      padding: 8px 14px;
-      border-radius: 8px;
-      background: rgba(24, 24, 24, .92);
-      color: white;
-      font-size: 15px;
-      font-weight: 600;
-      pointer-events: none;
-    }
+    .guide { margin-top: 14px; color: var(--muted); font-size: 13px; }
+    .guide p + p, details p { margin-top: 8px; }
+    details h2 { margin-top: 12px; }
 
-    .row { margin: 18px 0; }
-    .camera-controls { justify-content: space-between; flex-wrap: wrap; }
-    .muted, #gesture, #status, output { color: var(--muted); font-size: 12px; }
-    #gesture, #status { min-height: 20px; }
-
-    progress {
-      display: block;
-      width: 100%;
-      height: 4px;
-      accent-color: var(--text);
-    }
-
-    .player, .guide, details {
-      margin-top: 26px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
-    }
-
-    select { width: 100%; margin-top: 12px; }
-    .transport { justify-content: center; margin: 24px 0; }
-
-    #play {
-      min-width: 90px;
-      background: var(--text);
-      border-color: var(--text);
-      color: white;
-    }
-
-    input[type="range"] {
-      flex: 1;
-      min-width: 0;
-    }
-
-    input { accent-color: var(--text); }
-    output { min-width: 44px; text-align: right; }
-    .guide, details { color: var(--muted); font-size: 13px; }
-    .guide p { margin: 4px 0; }
-    details h2 { color: var(--text); font-size: 20px; margin-top: 22px; }
-
-    @media (max-width: 480px) {
-      body { padding: 24px 16px; }
-      .transport { gap: 8px; }
+    @media (max-width: 420px) {
+      .panel { padding: 15px; }
+      .transport { gap: 6px; }
+      button { padding: 8px 10px; }
     }
   </style>
 </head>
 
 <body>
+  <div id="visualizer" aria-hidden="true"></div>
+  <audio id="audio" preload="metadata"></audio>
+
   <main>
-    <header>
-      <h1>Gesture Player</h1>
-      <button id="add-music" type="button">Add music +</button>
-      <input id="files" type="file" accept="audio/*" multiple hidden>
-    </header>
+    <section class="music-deck" aria-label="Music player and visualizer">
+      <div class="panel" id="player-card">
+        <div id="player-feedback" class="feedback" aria-hidden="true" hidden></div>
 
-    <section aria-label="Hand tracking">
-      <div id="camera-view">
-        <div id="command-feedback" aria-hidden="true" hidden></div>
+        <div class="row spread" style="margin-top: 0">
+          <h1>Gesture Player</h1>
+          <button id="add-music" type="button">Add music +</button>
+          <input id="files" type="file" accept="audio/*" multiple hidden>
+        </div>
+
+        <div style="margin-top: 14px">
+          <span id="track-number" class="muted">LOCAL MUSIC</span>
+          <h2 id="song-title">Choose your music</h2>
+        </div>
+
+        <select id="playlist" aria-label="Choose a track" disabled>
+          <option>Add audio files to begin</option>
+        </select>
+
+        <div class="row transport">
+          <button id="previous" type="button">Previous</button>
+          <button id="play" type="button">Play</button>
+          <button id="next" type="button">Next</button>
+        </div>
+
+        <div class="row">
+          <input id="seek" type="range" min="0" max="100" step="0.1"
+            value="0" aria-label="Playback position" disabled>
+          <output id="time">0:00</output>
+        </div>
+
+        <div class="row">
+          <label for="volume">Volume</label>
+          <input id="volume" type="range" min="0" max="100" value="50">
+          <output id="volume-value">50%</output>
+        </div>
+
+        <div class="row spread">
+          <p id="status" role="status">Add audio files to listen.</p>
+          <a href="#camera-controls">Gesture controls ↓</a>
+        </div>
       </div>
-
-      <div class="row camera-controls">
-        <button id="camera-button" type="button">Start camera</button>
-        <label>
-          <input id="gesture-enabled" type="checkbox">
-          Gesture controls
-        </label>
-      </div>
-
-      <p id="gesture">Camera off</p>
-      <progress
-        id="hold-progress"
-        max="1"
-        value="0"
-        aria-label="Palm hold progress"
-      ></progress>
     </section>
 
-    <section class="player" aria-label="Music player">
-      <span id="track-number" class="muted">LOCAL MUSIC</span>
-      <h2 id="song-title">Choose your music.</h2>
+    <div class="more">
+      <section class="panel" id="camera-controls" aria-labelledby="camera-title">
+        <h2 id="camera-title">Gesture controls</h2>
 
-      <select id="playlist" aria-label="Choose a track" disabled>
-        <option>Add audio files to begin</option>
-      </select>
+        <div id="camera-view">
+          <div id="camera-feedback" class="feedback" aria-hidden="true" hidden></div>
+        </div>
 
-      <div class="row transport">
-        <button id="previous" type="button">Previous</button>
-        <button id="play" type="button">Play</button>
-        <button id="next" type="button">Next</button>
-      </div>
+        <div class="row spread">
+          <button id="camera-button" type="button">Start camera</button>
+          <label>
+            <input id="gesture-enabled" type="checkbox">
+            Enable gestures
+          </label>
+        </div>
 
-      <div class="row">
-        <input
-          id="seek"
-          type="range"
-          min="0"
-          max="100"
-          step="0.1"
-          value="0"
-          aria-label="Playback position"
-          disabled
-        >
-        <output id="time">0:00</output>
-      </div>
+        <p id="gesture">Camera off</p>
+        <progress id="hold-progress" max="1" value="0"
+          aria-label="Palm hold progress"></progress>
 
-      <div class="row">
-        <label for="volume">Volume</label>
-        <input id="volume" type="range" min="0" max="100" value="50">
-        <output id="volume-value">50%</output>
-      </div>
+        <div class="guide">
+          <p><strong>Play or pause.</strong> Hold an open palm still for one second.</p>
+          <p><strong>Change tracks.</strong> Swipe an open hand left or right.</p>
+          <p>
+            <strong>Adjust volume.</strong> Touch your thumb and index finger
+            and keep at least two other fingers extended. When the label says
+            “Pinch locked,” move your hand up or down.
+          </p>
+        </div>
+      </section>
 
-      <p id="status" role="status">
-        Add audio files. Your music stays in your browser.
-      </p>
-    </section>
-
-    <section class="guide" aria-label="Gesture instructions">
-      <p><strong>Play or pause.</strong> Hold an open palm still for one second.</p>
-      <p><strong>Change tracks.</strong> Swipe an open hand left or right.</p>
-      <p>
-        <strong>Adjust volume.</strong> Touch your thumb and index finger,
-        keep at least two other fingers extended, and hold briefly.
-        When the label says “Pinch locked,” move your hand up or down.
-      </p>
-    </section>
-
-    <details>
-      <summary>Project proposal</summary>
-      <h2>Music in Your Hands</h2>
-
-      <p>
-        I propose creating a minimal gesture-controlled music player using
-        ml5.js and p5.js. The project explores how hand movements can make
-        everyday music playback more playful while reducing the need to
-        reach for a mouse or keyboard.
-      </p>
-
-      <p>
-        Users select local audio files and control playback through webcam
-        gestures. An open palm toggles playback, horizontal swipes change
-        tracks, and a held pinch adjusts volume as the hand moves vertically.
-        The interface is intended for people listening to music while
-        drawing, making things, or working at a desk.
-      </p>
-
-      <p>
-        ml5.js HandPose estimates hand landmarks. My code interprets their
-        positions and movement as playback commands. p5.js displays a mirrored
-        camera preview, and gesture labels, a hold indicator, and a confirmation
-        badge show what the player detects and does.
-      </p>
-
-      <p>
-        I will evaluate task completion, unintended commands, and comfort
-        under different lighting and hand positions. Those observations will
-        guide changes to the gesture rules and feedback. Standard playback
-        buttons give users another way to control the player.
-      </p>
-    </details>
+      <details class="panel">
+        <summary>Project proposal</summary>
+        <h2>Music in Your Hands</h2>
+        <p>
+          I propose creating a gesture-controlled music player using ml5.js and
+          p5.js. The project explores how hand movements can make everyday music
+          playback more playful while reducing the need to reach for a mouse or
+          keyboard.
+        </p>
+        <p>
+          Users select local audio files and control playback through webcam
+          gestures. An open palm toggles playback, horizontal swipes change
+          tracks, and a held pinch adjusts the volume as the hand moves vertically.
+          The interface is intended for people listening to music while drawing,
+          making things, or working at a desk.
+        </p>
+        <p>
+          ml5.js HandPose estimates hand landmarks. My code interprets their
+          positions and movement as playback commands. p5.js displays a mirrored
+          camera preview and an animation that reacts to the music. Gesture
+          labels, a hold indicator, and confirmation badges show what the player
+          detects and does.
+        </p>
+        <p>
+          I will evaluate task completion, unintended commands, and comfort
+          under different lighting and hand positions. Those observations will
+          guide changes to the gesture rules and feedback. Standard playback
+          buttons give users another way to control the player.
+        </p>
+      </details>
+    </div>
   </main>
 
   <script>
-    // 1. SHARED SETTINGS AND INTERFACE
+    // 1. LOCAL MUSIC PLAYER
 
     const $ = id => document.getElementById(id);
-    const cameraWidth = 640;
-    const cameraHeight = 480;
-    const cameraTimeoutMs = 650;
-    const feedbackTimeMs = 1200;
+    const audio = $("audio");
+    const cameraW = 640;
+    const cameraH = 480;
+    const clamp = value => Math.min(1, Math.max(0, value));
+    const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+    let tracks = [];
+    let trackIndex = 0;
+    let playRequest = 0;
+    let feedbackTimer;
+
+    function status(message) {
+      $("status").textContent = message;
+    }
+
+    function setVolume(value) {
+      audio.volume = clamp(value);
+      const percent = Math.round(audio.volume * 100);
+      $("volume").value = percent;
+      $("volume-value").textContent = `${percent}%`;
+    }
+
+    function timeLabel(seconds) {
+      const whole = Number.isFinite(seconds) ? Math.floor(seconds) : 0;
+      return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+    }
+
+    async function playTrack() {
+      if (!tracks.length) {
+        status("Add audio files first.");
+        return false;
+      }
+
+      // Ignore playback results from an earlier track or a canceled request.
+      const request = ++playRequest;
+
+      try {
+        await audio.play();
+        if (request !== playRequest || audio.paused) return false;
+        status("Playing");
+        return true;
+      } catch (error) {
+        if (request === playRequest) {
+          status(error.name === "NotAllowedError"
+            ? "Click Play once to allow audio playback."
+            : "This file could not play. Try a different audio file.");
+        }
+        return false;
+      }
+    }
+
+    function loadTrack(index, autoplay = !audio.paused) {
+      if (!tracks.length) return;
+
+      playRequest++;
+      audio.pause();
+      trackIndex = (index + tracks.length) % tracks.length;
+
+      const track = tracks[trackIndex];
+      audio.src = track.url;
+      audio.load();
+
+      $("song-title").textContent = track.name;
+      $("track-number").textContent = `${trackIndex + 1} / ${tracks.length}`;
+      $("playlist").value = trackIndex;
+      $("seek").disabled = true;
+      $("seek").value = 0;
+      $("time").textContent = "0:00";
+
+      if (autoplay) playTrack();
+      else status("Track selected");
+    }
+
+    async function togglePlayback(fromGesture = false) {
+      if (audio.paused) {
+        const started = await playTrack();
+        if (started && fromGesture && gesturesEnabled()) showFeedback("▶ GO");
+        return;
+      }
+
+      playRequest++;
+      audio.pause();
+      status("Paused");
+      if (fromGesture) showFeedback("⏸ PAUSE");
+    }
+
+    function changeTrack(direction, fromGesture = false) {
+      if (!tracks.length) {
+        status("Add audio files first.");
+        return;
+      }
+
+      if (fromGesture && tracks.length < 2) {
+        showFeedback("Add a second track to swipe");
+        return;
+      }
+
+      loadTrack(trackIndex + direction);
+      if (fromGesture) showFeedback(direction > 0 ? "⏭ NEXT" : "⏮ PREVIOUS");
+    }
+
+    function showFeedback(message) {
+      clearTimeout(feedbackTimer);
+
+      for (const id of ["player-feedback", "camera-feedback"]) {
+        $(id).textContent = message;
+        $(id).hidden = false;
+      }
+
+      feedbackTimer = setTimeout(hideFeedback, 1200);
+    }
+
+    function hideFeedback() {
+      clearTimeout(feedbackTimer);
+      $("player-feedback").hidden = true;
+      $("camera-feedback").hidden = true;
+    }
+
+    function gesturesEnabled() {
+      return $("gesture-enabled").checked && !document.hidden;
+    }
+
+    $("add-music").onclick = () => $("files").click();
+
+    $("files").onchange = event => {
+      const files = Array.from(event.target.files);
+      if (!files.length) return;
+
+      $("gesture-enabled").checked = false;
+      recognizer.reset();
+      hideFeedback();
+
+      const previousTracks = tracks;
+      audio.pause();
+
+      tracks = files.map(file => ({
+        name: file.name.replace(/\.[^.]+$/, ""),
+        url: URL.createObjectURL(file)
+      }));
+
+      $("playlist").replaceChildren(
+        ...tracks.map((track, index) => new Option(track.name, String(index)))
+      );
+      $("playlist").disabled = false;
+
+      loadTrack(0, false);
+
+      for (const track of previousTracks) URL.revokeObjectURL(track.url);
+
+      status("Music loaded. Press Play to start the visualizer.");
+      event.target.value = "";
+    };
+
+    $("play").onclick = () => {
+      connectVisualizer();
+      togglePlayback();
+    };
+
+    $("previous").onclick = () => changeTrack(-1);
+    $("next").onclick = () => changeTrack(1);
+    $("playlist").onchange = event => loadTrack(Number(event.target.value));
+    $("volume").oninput = event => setVolume(Number(event.target.value) / 100);
+    setVolume(0.5);
+
+    $("seek").oninput = event => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        audio.currentTime = Number(event.target.value) * audio.duration / 100;
+      }
+    };
+
+    audio.addEventListener("loadedmetadata", () => {
+      $("seek").disabled = !Number.isFinite(audio.duration) || audio.duration <= 0;
+    });
+
+    audio.addEventListener("timeupdate", () => {
+      $("time").textContent = timeLabel(audio.currentTime);
+
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        $("seek").value = 100 * audio.currentTime / audio.duration;
+      }
+    });
+
+    for (const event of ["play", "pause", "ended"]) {
+      audio.addEventListener(event, () => {
+        $("play").textContent = audio.paused || audio.ended ? "Play" : "Pause";
+      });
+    }
+
+    audio.addEventListener("ended", () => loadTrack(trackIndex + 1, true));
+
+    audio.addEventListener("error", () => {
+      if (tracks.length) status("This audio file could not be read.");
+    });
+
+    // 2. GESTURE RECOGNITION
 
     const gestureSettings = {
-      // Original palm threshold. A fingertip must be 18% farther
-      // from the wrist than its middle joint is.
       palmRatio: 1.18,
       palmHoldMs: 1000,
       holdDrift: 25,
-
-      // Allow a brief pose flicker without wiping motion history.
       poseGraceMs: 160,
       trackingGapMs: 350,
-
-      // Swipe distances use pixels in the 640 × 480 camera canvas.
       swipeDistance: 90,
       swipeWindowMs: 430,
       swipeMinMs: 100,
       swipeMinSpeed: 0.23,
       swipeDirectionRatio: 1.6,
       cooldownMs: 650,
-
-      // Pinch entry is strict. Release uses a wider gap so small
-      // tracking fluctuations don't repeatedly start and stop it.
       pinchEnter: 0.25,
       pinchExit: 0.38,
       pinchHoldMs: 180,
@@ -284,274 +501,6 @@
       volumeDeadZone: 12,
       volumeTravel: 240
     };
-
-    const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-    const clamp = value => Math.min(1, Math.max(0, value));
-
-    function showStatus(message) {
-      $("status").textContent = message;
-    }
-
-    function gesturesEnabled() {
-      return $("gesture-enabled").checked && !document.hidden;
-    }
-
-    function formatTime(seconds) {
-      if (!Number.isFinite(seconds)) return "0:00";
-      const minutes = Math.floor(seconds / 60);
-      const remainder = Math.floor(seconds % 60);
-      return `${minutes}:${String(remainder).padStart(2, "0")}`;
-    }
-
-    // 2. LOCAL AUDIO AND PLAYLIST
-
-    const player = {
-      audio: new Audio(),
-      tracks: [],
-      index: 0,
-      request: 0,
-      seeking: false,
-
-      addFiles(files) {
-        if (!files.length) return;
-
-        $("gesture-enabled").checked = false;
-        hideCommandFeedback();
-
-        // Detach old audio before releasing the local file URLs.
-        this.request++;
-        this.audio.pause();
-        this.audio.removeAttribute("src");
-        this.audio.load();
-
-        for (const track of this.tracks) {
-          URL.revokeObjectURL(track.url);
-        }
-
-        this.tracks = files.map(file => ({
-          name: file.name.replace(/\.[^.]+$/, ""),
-          url: URL.createObjectURL(file)
-        }));
-
-        const options = this.tracks.map((track, index) => {
-          const option = document.createElement("option");
-          option.value = index;
-          option.textContent = track.name;
-          return option;
-        });
-
-        $("playlist").replaceChildren(...options);
-        $("playlist").disabled = false;
-
-        this.load(0);
-        showStatus("Music loaded. Click Play once, then enable gestures.");
-      },
-
-      load(index) {
-        const count = this.tracks.length;
-        if (!count) return;
-
-        this.request++;
-        this.audio.pause();
-        this.seeking = false;
-        this.index = (index + count) % count;
-
-        const track = this.tracks[this.index];
-        this.audio.src = track.url;
-        this.audio.load();
-
-        $("song-title").textContent = track.name;
-        $("track-number").textContent = `${this.index + 1} / ${count}`;
-        $("playlist").value = this.index;
-        $("seek").value = 0;
-        $("seek").disabled = true;
-        $("time").textContent = "0:00";
-        this.updateButton();
-      },
-
-      async play() {
-        if (!this.tracks.length) {
-          showStatus("Add audio files first.");
-          return false;
-        }
-
-        // Ignore a delayed result if another command replaced this request.
-        const request = ++this.request;
-
-        try {
-          await this.audio.play();
-
-          if (request !== this.request || this.audio.paused) return false;
-
-          showStatus("Playing");
-          return true;
-        } catch (error) {
-          if (request === this.request) {
-            showStatus(
-              error.name === "NotAllowedError"
-                ? "Click Play once to allow audio playback."
-                : "Unable to play this file. Try another audio format."
-            );
-          }
-
-          return false;
-        }
-      },
-
-      toggle() {
-        if (this.audio.paused) return this.play();
-
-        this.request++;
-        this.audio.pause();
-        showStatus("Paused");
-      },
-
-      select(index) {
-        const wasPlaying = !this.audio.paused;
-        this.load(index);
-
-        if (wasPlaying) this.play();
-        else showStatus("Track selected");
-      },
-
-      change(direction) {
-        if (!this.tracks.length) {
-          showStatus("Add audio files first.");
-          return;
-        }
-
-        this.select(this.index + direction);
-      },
-
-      setVolume(value) {
-        this.audio.volume = clamp(value);
-        const percent = Math.round(this.audio.volume * 100);
-
-        $("volume").value = percent;
-        $("volume-value").textContent = `${percent}%`;
-      },
-
-      updateButton() {
-        $("play").textContent = this.audio.paused ? "Play" : "Pause";
-      }
-    };
-
-    player.setVolume(0.5);
-
-    $("add-music").onclick = () => $("files").click();
-
-    $("files").onchange = event => {
-      player.addFiles([...event.target.files]);
-      event.target.value = "";
-    };
-
-    $("play").onclick = () => player.toggle();
-    $("previous").onclick = () => player.change(-1);
-    $("next").onclick = () => player.change(1);
-    $("playlist").onchange = event => player.select(Number(event.target.value));
-    $("volume").oninput = event => player.setVolume(Number(event.target.value) / 100);
-
-    $("seek").oninput = () => {
-      player.seeking = true;
-    };
-
-    $("seek").onchange = () => {
-      const duration = player.audio.duration;
-
-      if (Number.isFinite(duration) && duration > 0) {
-        player.audio.currentTime = Number($("seek").value) / 100 * duration;
-      }
-
-      player.seeking = false;
-    };
-
-    player.audio.addEventListener("loadedmetadata", () => {
-      const duration = player.audio.duration;
-      $("seek").disabled = !Number.isFinite(duration) || duration <= 0;
-    });
-
-    player.audio.addEventListener("timeupdate", () => {
-      const { currentTime, duration } = player.audio;
-      $("time").textContent = formatTime(currentTime);
-
-      if (!player.seeking && Number.isFinite(duration) && duration > 0) {
-        $("seek").value = currentTime / duration * 100;
-      }
-    });
-
-    for (const event of ["play", "pause"]) {
-      player.audio.addEventListener(event, () => player.updateButton());
-    }
-
-    player.audio.addEventListener("ended", () => {
-      player.load(player.index + 1);
-      player.play();
-    });
-
-    player.audio.addEventListener("error", () => {
-      if (player.tracks.length) showStatus("Unable to read this audio file.");
-    });
-
-    // 3. COMMAND CONFIRMATIONS
-
-    let feedbackTimer;
-
-    function hideCommandFeedback() {
-      clearTimeout(feedbackTimer);
-      $("command-feedback").hidden = true;
-    }
-
-    function confirmCommand(text) {
-      clearTimeout(feedbackTimer);
-      $("command-feedback").textContent = text;
-      $("command-feedback").hidden = false;
-      feedbackTimer = setTimeout(hideCommandFeedback, feedbackTimeMs);
-    }
-
-    function changeTrackByGesture(direction, confirmation) {
-      if (player.tracks.length < 2) {
-        confirmCommand("Add a second track to swipe");
-        return;
-      }
-
-      player.change(direction);
-      confirmCommand(confirmation);
-    }
-
-    const actions = {
-      async toggle() {
-        if (!player.audio.paused) {
-          player.toggle();
-          confirmCommand("⏸ PAUSE");
-          return;
-        }
-
-        // GO confirms that the audio actually started.
-        const started = await player.toggle();
-        if (started && gesturesEnabled()) confirmCommand("▶ GO");
-      },
-
-      previous() {
-        changeTrackByGesture(-1, "⏮ PREVIOUS");
-      },
-
-      next() {
-        changeTrackByGesture(1, "⏭ NEXT");
-      },
-
-      volume(value) {
-        const before = Math.round(player.audio.volume * 100);
-        const after = Math.round(value * 100);
-
-        // Ignore changes too small to affect the displayed percentage.
-        if (after === before) return;
-
-        player.setVolume(after / 100);
-        confirmCommand(`♪ VOLUME ${after}%`);
-      }
-    };
-
-    // 4. GESTURE RECOGNITION
 
     class GestureRecognizer {
       constructor() {
@@ -586,8 +535,6 @@
         if (now - this.lastSeen > rules.trackingGapMs) this.clearPose();
         this.lastSeen = now;
 
-        // The wrist and middle-finger base give a steadier motion point
-        // than an individual fingertip.
         const wrist = points[0];
         const palm = points[9];
         const center = {
@@ -595,16 +542,14 @@
           y: (wrist.y + palm.y) / 2
         };
 
-        // Divide by hand size so a pinch works at different camera distances.
+        // Comparing with hand size makes pinch detection less distance-sensitive.
         const handSize = Math.max(20, distance(wrist, palm));
         const pinchRatio = distance(points[4], points[8]) / handSize;
-
         const extended = [8, 12, 16, 20].filter(tip =>
           distance(points[tip], wrist) >
           distance(points[tip - 2], wrist) * rules.palmRatio
         );
 
-        // An active pinch owns the gesture until the fingers separate.
         if (this.pinch) {
           if (pinchRatio < rules.pinchExit) return this.adjustVolume(center.y);
           this.pinch = null;
@@ -622,11 +567,9 @@
           this.palmLatched = false;
         }
 
-        // Give the hand time to return after a swipe.
+        // The cooldown gives the hand time to return after a swipe.
         if (now < this.cooldownUntil) return { label: "Command received" };
 
-        // SWIPE: three extended fingers are enough, and a brief tracking
-        // wobble doesn't erase the start of the movement.
         if (now - this.lastSwipePose <= rules.poseGraceMs) {
           this.trail = this.trail.filter(
             sample => now - sample.time <= rules.swipeWindowMs
@@ -634,7 +577,6 @@
           this.trail.push({ ...center, time: now });
 
           const swipe = swipePose && this.findSwipe(center, now);
-
           if (swipe) {
             this.finishCommand(now);
             return {
@@ -646,17 +588,14 @@
           this.trail = [];
         }
 
-        // PINCH: two other fingers must remain extended. The hand must
-        // hold briefly in place before vertical motion changes volume.
+        // A brief, steady pinch with two supporting fingers unlocks volume.
         const supportingFingers = extended.filter(tip => tip !== 8).length;
 
         if (pinchRatio <= rules.pinchEnter && supportingFingers >= 2) {
           this.hold = null;
 
-          if (
-            !this.pinchCandidate ||
-            distance(center, this.pinchCandidate) > rules.pinchStartDrift
-          ) {
+          if (!this.pinchCandidate ||
+              distance(center, this.pinchCandidate) > rules.pinchStartDrift) {
             this.pinchCandidate = { ...center, time: now };
           }
 
@@ -671,13 +610,8 @@
 
         this.pinchCandidate = null;
 
-        // PALM HOLD: require four extended fingers and a steady hand.
-        // Once triggered, lower or relax the hand before holding again.
         if (!fullPalm) return { label: "Ready · open your palm" };
-
-        if (this.palmLatched) {
-          return { label: "Relax or lower your hand to reset the hold" };
-        }
+        if (this.palmLatched) return { label: "Relax or lower your hand to reset" };
 
         if (!this.hold || distance(center, this.hold) > rules.holdDrift) {
           this.hold = { ...center, time: now };
@@ -696,7 +630,6 @@
       findSwipe(center, now) {
         const rules = gestureSettings;
 
-        // Check recent points for a fast, mostly horizontal movement.
         for (const sample of this.trail) {
           const elapsed = now - sample.time;
           const dx = center.x - sample.x;
@@ -727,7 +660,7 @@
         const rules = gestureSettings;
         const pinch = this.pinch;
 
-        // Smooth jitter, then ignore the first 12 pixels of motion.
+        // Smooth tracking jitter and ignore the first 12 pixels of movement.
         pinch.filteredY += (y - pinch.filteredY) * 0.35;
 
         const travel = pinch.origin - pinch.filteredY;
@@ -742,166 +675,176 @@
 
     const recognizer = new GestureRecognizer();
 
-    // 5. CAMERA AND HANDPOSE
+    // 3. CAMERA AND HANDPOSE
+
+    let handModel;
+    let cameraStream;
+    let cameraVideo;
+    let handPoints;
+    let cameraRunning = false;
+    let lastDetection = 0;
 
     function loadHandModel() {
       return new Promise((resolve, reject) => {
         let instance;
-
-        const timeout = setTimeout(() => {
+        const timer = setTimeout(() => {
           reject(new Error("Hand tracking took too long to load. Try again."));
         }, 60000);
 
         try {
-          instance = ml5.handPose(
-            { maxHands: 1, flipped: false },
-            (model, error) => {
-              clearTimeout(timeout);
-              if (error) reject(error);
-              else resolve(model || instance);
-            }
-          );
+          instance = ml5.handPose({ maxHands: 1, flipped: false }, (model, error) => {
+            clearTimeout(timer);
+            if (error) reject(error);
+            else queueMicrotask(() => resolve(model || instance));
+          });
         } catch (error) {
-          clearTimeout(timeout);
+          clearTimeout(timer);
           reject(error);
         }
       });
     }
 
-    const camera = {
-      model: null,
-      video: null,
-      stream: null,
-      points: null,
-      running: false,
-      lastFrame: 0,
+    function stopCamera() {
+      cameraRunning = false;
+      $("gesture-enabled").checked = false;
+      hideFeedback();
+      recognizer.reset();
 
-      async start() {
-        if (this.running) {
-          this.stop();
-          return;
+      try {
+        handModel?.detectStop();
+      } catch (error) {
+        console.warn("Could not stop HandPose:", error);
+      }
+
+      cameraStream?.getTracks().forEach(track => track.stop());
+      cameraVideo?.remove();
+      cameraStream = null;
+      cameraVideo = null;
+      handPoints = null;
+
+      $("camera-button").textContent = "Start camera";
+      $("gesture").textContent = "Camera off";
+      $("hold-progress").value = 0;
+    }
+
+    $("camera-button").onclick = async () => {
+      if (cameraRunning) {
+        stopCamera();
+        return;
+      }
+
+      const button = $("camera-button");
+      button.disabled = true;
+      $("gesture").textContent = "Loading hand tracking…";
+
+      try {
+        if (!window.p5 || !window.ml5) {
+          throw new Error("The tracking libraries did not load.");
         }
 
-        const button = $("camera-button");
-        button.disabled = true;
-        $("gesture").textContent = "Loading hand tracking…";
-
-        try {
-          if (!window.ml5 || !window.p5) {
-            throw new Error("The tracking libraries did not load.");
-          }
-
-          if (!navigator.mediaDevices?.getUserMedia) {
-            throw new Error("Open this page with Live Server or HTTPS.");
-          }
-
-          if (!this.model) this.model = await loadHandModel();
-
-          $("gesture").textContent = "Allow camera access";
-
-          this.stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: cameraWidth, height: cameraHeight },
-            audio: false
-          });
-
-          const video = createVideo([]);
-          this.video = video;
-          video.elt.srcObject = this.stream;
-          video.elt.muted = true;
-          video.elt.playsInline = true;
-          video.size(cameraWidth, cameraHeight);
-          video.hide();
-          await video.elt.play();
-
-          this.running = true;
-          this.lastFrame = performance.now();
-          recognizer.reset();
-
-          this.model.detectStart(video, results => {
-            if (this.video === video) this.onDetection(results);
-          });
-
-          button.textContent = "Stop camera";
-          $("gesture").textContent = "Show one hand";
-        } catch (error) {
-          this.stop();
-          console.error("Hand tracking error:", error);
-
-          $("gesture").textContent = error.name === "NotAllowedError"
-            ? "Camera access denied. Check browser permissions."
-            : error.message;
-        } finally {
-          button.disabled = false;
-        }
-      },
-
-      onDetection(results) {
-        if (!this.running) return;
-
-        const now = performance.now();
-        const keypoints = results[0]?.keypoints;
-
-        this.lastFrame = now;
-        this.points = null;
-
-        if (keypoints?.length >= 21) {
-          const sourceWidth = this.video.elt.videoWidth || cameraWidth;
-          const sourceHeight = this.video.elt.videoHeight || cameraHeight;
-
-          // Mirror once so the skeleton and swipe directions match the preview.
-          this.points = keypoints.map(point => ({
-            x: cameraWidth - point.x * cameraWidth / sourceWidth,
-            y: point.y * cameraHeight / sourceHeight
-          }));
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error("Open this page with Live Server or HTTPS.");
         }
 
-        const enabled = gesturesEnabled();
-        const result = recognizer.update(this.points, now, player.audio.volume);
+        handModel ??= await loadHandModel();
+        $("gesture").textContent = "Allow camera access";
 
-        $("gesture").textContent =
-          result.label + (enabled ? "" : " · preview");
-        $("hold-progress").value = result.progress ?? 0;
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: cameraW, height: cameraH },
+          audio: false
+        });
 
-        if (enabled && result.action) actions[result.action](result.value);
-      },
+        const video = createVideo([]);
+        cameraVideo = video;
+        video.elt.srcObject = cameraStream;
+        video.elt.muted = true;
+        video.elt.playsInline = true;
+        video.size(cameraW, cameraH);
+        video.hide();
+        await video.elt.play();
 
-      stop() {
-        this.running = false;
-        this.points = null;
-        $("gesture-enabled").checked = false;
-        hideCommandFeedback();
+        cameraRunning = true;
+        lastDetection = performance.now();
         recognizer.reset();
 
-        try {
-          this.model?.detectStop();
-        } catch (error) {
-          console.warn("Could not stop detection:", error);
-        }
+        button.textContent = "Stop camera";
+        $("gesture").textContent = "Show one hand";
 
-        this.stream?.getTracks().forEach(track => track.stop());
-        this.video?.remove();
-        this.stream = null;
-        this.video = null;
-
-        $("camera-button").textContent = "Start camera";
-        $("gesture").textContent = "Camera off";
-        $("hold-progress").value = 0;
+        handModel.detectStart(video, results => {
+          if (cameraVideo === video) onDetection(results);
+        });
+      } catch (error) {
+        stopCamera();
+        $("gesture").textContent = error.name === "NotAllowedError"
+          ? "Camera access denied. Check browser permissions."
+          : error.message;
+      } finally {
+        button.disabled = false;
       }
     };
 
-    $("camera-button").onclick = () => camera.start();
+    function onDetection(results) {
+      if (!cameraRunning) return;
+
+      lastDetection = performance.now();
+      const points = results[0]?.keypoints;
+      handPoints = null;
+
+      if (points?.length >= 21) {
+        const video = cameraVideo.elt;
+        const scaleX = cameraW / (video.videoWidth || cameraW);
+        const scaleY = cameraH / (video.videoHeight || cameraH);
+
+        // Match the direction of movement to the mirrored preview.
+        handPoints = points.map(point => ({
+          x: cameraW - point.x * scaleX,
+          y: point.y * scaleY
+        }));
+      }
+
+      const result = recognizer.update(handPoints, lastDetection, audio.volume);
+      const enabled = gesturesEnabled();
+
+      $("gesture").textContent = result.label + (enabled ? "" : " · preview");
+      $("hold-progress").value = result.progress ?? 0;
+
+      if (!enabled) return;
+
+      switch (result.action) {
+        case "toggle":
+          togglePlayback(true);
+          break;
+        case "previous":
+          changeTrack(-1, true);
+          break;
+        case "next":
+          changeTrack(1, true);
+          break;
+        case "volume": {
+          const percent = Math.round(result.value * 100);
+          if (percent !== Math.round(audio.volume * 100)) {
+            setVolume(percent / 100);
+            showFeedback(`♪ VOLUME ${percent}%`);
+          }
+          break;
+        }
+      }
+    }
 
     $("gesture-enabled").onchange = () => {
       recognizer.reset();
-      hideCommandFeedback();
+      hideFeedback();
 
-      if ($("gesture-enabled").checked && (!camera.running || !player.tracks.length)) {
+      if (!$("gesture-enabled").checked) return;
+
+      if (!cameraRunning || !tracks.length) {
         $("gesture-enabled").checked = false;
-        showStatus("Add music and start the camera first.");
+        $("gesture").textContent = "Add music and start the camera first.";
+        return;
       }
-    };
 
-    // 6. P5.JS PREVIEW AND HAND SKELETON
+      connectVisualizer();
+    };
 
     const handConnections = [
       [0, 1, 2, 3, 4],
@@ -913,19 +856,19 @@
     ];
 
     function setup() {
-      createCanvas(cameraWidth, cameraHeight).parent("camera-view");
       pixelDensity(1);
+      createCanvas(cameraW, cameraH).parent("camera-view");
       frameRate(30);
       textAlign(CENTER, CENTER);
     }
 
     function draw() {
-      background("#e8e8e2");
+      background("#211832");
 
-      if (!camera.running || !camera.video) {
+      if (!cameraRunning || !cameraVideo) {
         noStroke();
-        fill("#666");
-        textSize(15);
+        fill("#ddd0f0");
+        textSize(16);
         text("Your camera preview", width / 2, height / 2);
         return;
       }
@@ -933,51 +876,277 @@
       push();
       translate(width, 0);
       scale(-1, 1);
-      image(camera.video, 0, 0, width, height);
+      image(cameraVideo, 0, 0, width, height);
       pop();
 
-      if (performance.now() - camera.lastFrame > cameraTimeoutMs) {
-        camera.points = null;
+      if (performance.now() - lastDetection > 650) {
+        handPoints = null;
         recognizer.reset();
         $("gesture").textContent = "Looking for your hand";
         $("hold-progress").value = 0;
-        return;
       }
 
-      const points = camera.points;
-      if (!points) return;
+      if (!handPoints) return;
 
       stroke(255);
       strokeWeight(2);
 
       for (const chain of handConnections) {
         for (let i = 1; i < chain.length; i++) {
-          const a = points[chain[i - 1]];
-          const b = points[chain[i]];
+          const a = handPoints[chain[i - 1]];
+          const b = handPoints[chain[i]];
           line(a.x, a.y, b.x, b.y);
         }
       }
 
       noStroke();
       fill(255);
-      for (const point of points) circle(point.x, point.y, 6);
+      for (const point of handPoints) circle(point.x, point.y, 6);
     }
 
-    // 7. CLEAN UP WHEN LEAVING THE PAGE
+    // 4. ANALYZE THE MUSIC ALREADY PLAYING
+
+    let audioContext;
+    let analyser;
+    let frequencies;
+    let waveform;
+
+    async function connectVisualizer() {
+      if (!tracks.length || !window.AudioContext) return;
+
+      try {
+        audioContext ??= new AudioContext();
+
+        if (audioContext.state !== "running") await audioContext.resume();
+        if (analyser) return;
+
+        const meter = audioContext.createAnalyser();
+        meter.fftSize = 2048;
+        meter.smoothingTimeConstant = 0.65;
+        frequencies = new Uint8Array(meter.frequencyBinCount);
+        waveform = new Float32Array(meter.fftSize);
+
+        // Every track uses the same audio element and analysis connection.
+        meter.connect(audioContext.destination);
+        audioContext.createMediaElementSource(audio).connect(meter);
+        analyser = meter;
+      } catch (error) {
+        console.warn("Could not start the visualizer audio:", error);
+      }
+    }
+
+    function bandLevel(lowHz, highHz) {
+      const hzPerBin = audioContext.sampleRate / analyser.fftSize;
+      const start = Math.ceil(lowHz / hzPerBin);
+      const end = Math.min(frequencies.length, Math.ceil(highHz / hzPerBin));
+
+      let sum = 0;
+      for (let bin = start; bin < end; bin++) sum += frequencies[bin];
+
+      return sum / (255 * Math.max(1, end - start));
+    }
+
+    function soundLevel() {
+      // RMS measures the current loudness across the audio waveform.
+      let sumOfSquares = 0;
+      for (const sample of waveform) sumOfSquares += sample * sample;
+      return clamp(4 * Math.sqrt(sumOfSquares / waveform.length));
+    }
+
+    // 5. FULL-SCREEN VISUALIZER
+
+    window.addEventListener("load", () => {
+      if (!window.p5) return;
+
+      const stage = $("visualizer");
+      const card = $("player-card");
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      // A separate p5 instance leaves the camera's setup and draw available.
+      new window.p5(p => {
+        let recordAngle = 0;
+        let frameAngle = -0.2;
+        let orbitAngle = 0;
+        let tokenAngle = 0;
+        let pulse = 0;
+        let bass = 0;
+        let treble = 0;
+
+        function fitCanvas() {
+          const w = stage.clientWidth;
+          const h = stage.clientHeight;
+
+          if (w && h && (w !== p.width || h !== p.height)) {
+            p.resizeCanvas(w, h, true);
+          }
+        }
+
+        p.setup = () => {
+          p.pixelDensity(1);
+          p.createCanvas(stage.clientWidth, stage.clientHeight);
+          p.rectMode(p.CENTER);
+          p.frameRate(30);
+          new ResizeObserver(fitCanvas).observe(stage);
+        };
+
+        p.draw = () => {
+          const volume = audio.muted ? 0 : audio.volume;
+          const moving = analyser && audioContext.state === "running" &&
+            !audio.paused && !audio.ended && volume > 0 && !reduceMotion.matches;
+
+          if (moving) {
+            analyser.getByteFrequencyData(frequencies);
+            analyser.getFloatTimeDomainData(waveform);
+          }
+
+          // The track sets the pulse. The player volume scales its strength.
+          const loudness = moving ? soundLevel() * Math.sqrt(volume) : 0;
+          pulse = p.lerp(pulse, loudness, loudness > pulse ? 0.4 : 0.16);
+          bass = p.lerp(bass, moving ? bandLevel(45, 170) * volume : 0, 0.24);
+          treble = p.lerp(treble, moving ? bandLevel(3000, 8500) * volume : 0, 0.23);
+
+          if (moving) {
+            const dt = Math.min(p.deltaTime, 50) / 1000;
+            recordAngle += dt * (0.5 + 2.6 * bass) * volume;
+            frameAngle -= dt * (0.3 + 1.6 * pulse) * volume;
+            orbitAngle += dt * (0.45 + 1.8 * pulse) * volume;
+            tokenAngle -= dt * (0.65 + 3 * treble) * volume;
+          }
+
+          p.background("#1d1531");
+          drawGrid();
+
+          // The orbit spans the screen around the centered player.
+          p.push();
+          p.translate(p.width / 2, p.height / 2);
+          drawOrbit(p.width * (0.36 + pulse * 0.05), p.height * (0.34 + pulse * 0.05));
+          p.pop();
+
+          // Give the record space beside the player on wide screens
+          // and above it on narrow screens.
+          const wide = p.width >= 950;
+          const roomAbove = Math.max(0, (p.height - card.offsetHeight) / 2);
+          const recordScale = wide
+            ? 1.35
+            : Math.min(1, p.width / 360, Math.max(0.36, roomAbove / 215));
+
+          p.push();
+          p.translate(
+            p.width * (wide ? 0.21 : 0.5),
+            wide ? p.height * 0.47 : Math.max(45, roomAbove / 2)
+          );
+          p.scale(recordScale);
+          drawFrame();
+          drawRecord();
+          p.pop();
+        };
+
+        function drawGrid() {
+          p.stroke(174, 152, 226, 24 + 95 * treble);
+          p.strokeWeight(1);
+
+          for (let x = 16; x < p.width; x += 32) {
+            p.line(x, 0, x, p.height);
+          }
+
+          for (let y = 16; y < p.height; y += 32) {
+            p.line(0, y, p.width, y);
+          }
+        }
+
+        function drawOrbit(rx, ry) {
+          p.noFill();
+          p.stroke(164, 235, 218, 75 + pulse * 125);
+          p.strokeWeight(1.5);
+          p.ellipse(0, 0, rx * 2, ry * 2);
+
+          const colors = ["#89f9d2", "#ff7bb9", "#afa8ff"];
+          const size = 13 + pulse * 10;
+
+          colors.forEach((color, index) => {
+            const phase = orbitAngle + index * Math.PI * 2 / 3;
+
+            p.push();
+            p.translate(Math.cos(phase) * rx, Math.sin(phase) * ry);
+            p.rotate(tokenAngle * (index + 1));
+            p.noStroke();
+            p.fill(color);
+
+            if (index === 0) {
+              p.rect(0, 0, size * 2, size * 0.8, 4);
+            } else if (index === 1) {
+              p.triangle(0, -size, size, size, -size, size);
+            } else {
+              p.quad(0, -size, size * 0.65, 0, 0, size, -size * 0.65, 0);
+            }
+
+            p.pop();
+          });
+        }
+
+        function drawFrame() {
+          p.push();
+          p.rotate(frameAngle);
+          const size = 156 + pulse * 35;
+
+          p.noFill();
+          p.stroke("#be9dff");
+          p.strokeWeight(3);
+          p.rect(0, 0, size, size, 24);
+
+          p.noStroke();
+          p.fill("#ff80c0");
+          p.circle(-size / 2, 0, 11);
+          p.circle(size / 2, 0, 11);
+          p.pop();
+        }
+
+        function drawRecord() {
+          p.push();
+          p.rotate(recordAngle);
+          const diameter = 110 + pulse * 64;
+
+          p.noStroke();
+          p.fill(255, 169 + pulse * 74, 77 + pulse * 50);
+          p.circle(0, 0, diameter);
+
+          p.noFill();
+          p.stroke(93, 54, 40, 140);
+          p.strokeWeight(1.5);
+          for (const ring of [0.52, 0.68, 0.84]) {
+            p.circle(0, 0, diameter * ring);
+          }
+
+          // The arc makes the rotation visible on the round record.
+          p.stroke("#753859");
+          p.strokeWeight(6);
+          p.arc(0, 0, diameter * 0.84, diameter * 0.84, 0.2, 1.2);
+
+          p.noStroke();
+          p.fill("#3b2848");
+          p.circle(0, 0, diameter * 0.25);
+          p.fill("#fff3d4");
+          p.circle(0, 0, 5);
+          p.pop();
+        }
+      }, stage);
+    }, { once: true });
+
+    // 6. PAGE CLEANUP
 
     document.addEventListener("visibilitychange", () => {
       recognizer.reset();
 
       if (document.hidden) {
         $("gesture-enabled").checked = false;
-        hideCommandFeedback();
+        hideFeedback();
       }
     });
 
     window.addEventListener("pagehide", () => {
-      camera.stop();
-      player.request++;
-      player.audio.pause();
+      stopCamera();
+      playRequest++;
+      audio.pause();
     });
   </script>
 </body>
